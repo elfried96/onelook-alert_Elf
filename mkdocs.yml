@@ -1,0 +1,70 @@
+site_name: One Look
+site_description: Modèle d'IA léger et embarquable qui analyse une image satellite en une seule passe et décide si elle mérite une alerte.
+site_author: elfried96
+site_url: https://elfried96.github.io/onelook-alert_Elf/
+repo_url: https://github.com/elfried96/onelook-alert_Elf
+repo_name: elfried96/onelook-alert_Elf
+edit_uri: edit/main/docs/
+copyright: One Look · Piscine Intelligence Lab · Makers · 2026
+
+theme:
+  name: material
+  language: fr
+  font:
+    text: IBM Plex Sans
+    code: IBM Plex Mono
+  icon:
+    repo: material/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Passer en mode sombre
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Passer en mode clair
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+extra_css:
+  - stylesheets/onelook.css
+
+nav:
+  - Accueil: index.md
+  - Cadrage: framing.md
+  - Données: data_card.md
+  - Méthode: method.md
+  - Résultats: results.md
+  - Limites et échecs: failure_cases.md
+  - Reproduire: reproduce.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg

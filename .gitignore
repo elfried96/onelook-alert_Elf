@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# PyCharm
+.idea/
+
+# Données et modèles : trop lourds pour GitHub, régénérés par les scripts
+data/*
+!data/README.md
+checkpoints/*
+!checkpoints/.gitkeep
+*.tif
+*.tiff
+*.pt
+*.pth
+*.onnx
+
+# Expériences
+runs/
+wandb/
+mlruns/
+
+# Site de documentation généré
+site/
+
+# Système
+.DS_Store
+
+# Réglages locaux de Claude Code
+.claude/

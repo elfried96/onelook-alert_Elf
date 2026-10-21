@@ -1,0 +1,139 @@
+/* One Look : thème MkDocs Material tiré du Design System One Look (Claude Design).
+   Les valeurs reprennent tokens.json ; modifier les deux ensemble. */
+
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600&display=swap");
+
+:root {
+  --ol-surface-000: #f4f6f5;
+  --ol-surface-100: #ffffff;
+  --ol-surface-200: #e6ebea;
+  --ol-line: #cfd8db;
+  --ol-ink: #14202b;
+  --ol-ink-muted: #4f5f6b;
+  --ol-brand: #1d5f96;
+  --ol-brand-tint: #d6e6f2;
+  --ol-on-brand: #ffffff;
+  --ol-alert: #a3470a;
+  --ol-alert-tint: #fbe9d9;
+  --ol-normal: #2b7253;
+  --ol-normal-tint: #d9ede3;
+  --ol-unknown: #6b4f8a;
+  --ol-unknown-tint: #ebe3f3;
+  --ol-font-display: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --ol-radius-s: 2px;
+  --ol-radius-m: 6px;
+  --ol-radius-l: 12px;
+}
+
+[data-md-color-scheme="slate"] {
+  --ol-surface-000: #0f171e;
+  --ol-surface-100: #16212b;
+  --ol-surface-200: #1e2b36;
+  --ol-line: #2c3b47;
+  --ol-ink: #e8eef1;
+  --ol-ink-muted: #9fb0bc;
+  --ol-brand: #6fb1e3;
+  --ol-brand-tint: #173247;
+  --ol-on-brand: #0f171e;
+  --ol-alert: #f2994a;
+  --ol-alert-tint: #3a2415;
+  --ol-normal: #6cc79b;
+  --ol-normal-tint: #15302a;
+  --ol-unknown: #b9a3d6;
+  --ol-unknown-tint: #2a2238;
+}
+
+/* Correspondance avec les variables de Material */
+[data-md-color-scheme="default"],
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: var(--ol-surface-100);
+  --md-primary-fg-color--light: var(--ol-surface-100);
+  --md-primary-fg-color--dark: var(--ol-surface-100);
+  --md-primary-bg-color: var(--ol-ink);
+  --md-primary-bg-color--light: var(--ol-ink-muted);
+  --md-accent-fg-color: var(--ol-brand);
+  --md-accent-fg-color--transparent: var(--ol-brand-tint);
+  --md-default-bg-color: var(--ol-surface-000);
+  --md-default-fg-color: var(--ol-ink);
+  --md-default-fg-color--light: var(--ol-ink-muted);
+  --md-default-fg-color--lighter: var(--ol-line);
+  --md-default-fg-color--lightest: var(--ol-surface-200);
+  --md-typeset-color: var(--ol-ink);
+  --md-typeset-a-color: var(--ol-brand);
+  --md-code-bg-color: var(--ol-surface-100);
+  --md-footer-bg-color: var(--ol-surface-200);
+  --md-footer-bg-color--dark: var(--ol-surface-200);
+  --md-footer-fg-color: var(--ol-ink);
+  --md-footer-fg-color--light: var(--ol-ink-muted);
+  --md-footer-fg-color--lighter: var(--ol-ink-muted);
+}
+
+/* En-tête : fond clair et filet, pas d'ombre */
+.md-header,
+.md-tabs {
+  border-bottom: 1px solid var(--ol-line);
+  box-shadow: none;
+}
+.md-header__topic:first-child {
+  font-family: var(--ol-font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+}
+
+/* Titres */
+.md-typeset h1,
+.md-typeset h2 {
+  font-family: var(--ol-font-display);
+  font-weight: 600;
+  color: var(--ol-ink);
+  text-wrap: balance;
+}
+.md-typeset h1 { font-size: 2.5em; line-height: 1.1; }
+.md-typeset h2 { font-size: 1.75em; line-height: 1.2; }
+.md-typeset h3 { font-weight: 600; }
+
+/* Tableaux : chiffres alignés */
+.md-typeset table:not([class]) {
+  border: 1px solid var(--ol-line);
+  border-radius: var(--ol-radius-m);
+  font-variant-numeric: tabular-nums;
+}
+.md-typeset table:not([class]) th {
+  background: var(--ol-surface-200);
+  color: var(--ol-ink);
+}
+.md-typeset code { border-radius: var(--ol-radius-s); }
+
+/* Encadrés : la note prend la couleur de la marque */
+.md-typeset .admonition.note,
+.md-typeset details.note {
+  border-color: var(--ol-brand);
+}
+.md-typeset .note > .admonition-title,
+.md-typeset .note > summary {
+  background-color: var(--ol-brand-tint);
+}
+
+/* Badges de décision du modèle : toujours avec leur libellé */
+.md-typeset .ol-badge {
+  display: inline-block;
+  padding: 0.1em 0.6em;
+  border-radius: var(--ol-radius-s);
+  font-family: var(--md-code-font-family);
+  font-size: 0.75em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.md-typeset .ol-badge--normal { color: var(--ol-normal); background: var(--ol-normal-tint); }
+.md-typeset .ol-badge--alert { color: var(--ol-alert); background: var(--ol-alert-tint); }
+.md-typeset .ol-badge--unknown { color: var(--ol-unknown); background: var(--ol-unknown-tint); }
+
+/* Accueil : la phrase d'accroche */
+.md-typeset .ol-lead {
+  font-size: 1.2em;
+  line-height: 1.5;
+  color: var(--ol-ink-muted);
+  max-width: 40em;
+}
