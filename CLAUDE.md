@@ -17,7 +17,8 @@ Anomalie visée : inondations (Sen1Floods11), à confirmer avec le mentor.
 
 - Python géré uniquement avec **uv** : jamais `pip`, `python -m venv` ni `requirements.txt`.
 - Dépendances dans `pyproject.toml` (groupes `dev` et `docs`), versions figées dans `uv.lock` (versionné).
-- Python 3.12. GPU : NVIDIA Quadro T2000, 4 Go.
+- Python 3.12.
+- **Aucun entraînement sur l'ordinateur local.** Les entraînements tournent sur GPU distant (Google Colab ou Kaggle) via des notebooks dans `notebooks/` qui clonent le dépôt et lancent `uv sync`. En local : code, tests sur petits échantillons, évaluation, export ONNX, démo.
 - Commandes :
   - Installer : `uv sync` (docs seules : `uv sync --only-group docs`)
   - Ajouter une dépendance : `uv add <paquet>` (`uv add --group dev <paquet>` pour les outils)

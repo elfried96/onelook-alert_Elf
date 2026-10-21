@@ -16,6 +16,10 @@ Les scripts de téléchargement et de préparation seront ajoutés dans `scripts
 
 ## Entraînement et évaluation
 
+Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en local. Les notebooks d'entraînement, dans `notebooks/`, clonent ce dépôt, installent l'environnement avec `uv sync` et récupèrent les données sur place.
+
+Le matériel utilisé pour chaque entraînement est indiqué dans la page Résultats.
+
 À venir.
 
 ## Site de documentation en local
