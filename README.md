@@ -2,7 +2,7 @@
 
 Modèle d'IA léger et embarquable qui analyse une image satellite en une seule passe et décide si elle mérite une alerte.
 
-**Documentation complète : https://elfried96.github.io/onelook-alert_Elf/**
+**Documentation complète : https://onelook-alert-elf.readthedocs.io/fr/latest/**
 
 Projet individuel de la Piscine Intelligence Lab · Makers (16 octobre → 16 novembre 2026).
 
@@ -42,9 +42,9 @@ tests/          tests automatiques
 
 ## Livrables
 
-- [Carnet de données](https://elfried96.github.io/onelook-alert_Elf/data_card/) : sources, licences, découpage, biais
-- [Résultats](https://elfried96.github.io/onelook-alert_Elf/results/) : tableau comparatif des approches
-- [Limites et échecs](https://elfried96.github.io/onelook-alert_Elf/failure_cases/)
+- [Carnet de données](https://onelook-alert-elf.readthedocs.io/fr/latest/data_card/) : sources, licences, découpage, biais
+- [Résultats](https://onelook-alert-elf.readthedocs.io/fr/latest/results/) : tableau comparatif des approches
+- [Limites et échecs](https://onelook-alert-elf.readthedocs.io/fr/latest/failure_cases/)
 - Démonstration sur une image jamais vue : à venir
 
 ## Licence
