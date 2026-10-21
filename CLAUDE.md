@@ -34,5 +34,8 @@ Anomalie visée : inondations (Sen1Floods11), à confirmer avec le mentor.
 
 ## Documentation
 
-Site MkDocs Material publié sur GitHub Pages par `.github/workflows/docs.yml` à chaque push sur `main` :
-https://elfried96.github.io/onelook-alert_Elf/
+Site MkDocs Material, publié de deux façons à chaque push sur `main` :
+- Read the Docs (`.readthedocs.yaml`, installation avec uv) : solution principale tant que le compte GitHub est bloqué pour un problème de facturation (Actions désactivées, ticket au support en cours).
+- GitHub Pages (`.github/workflows/docs.yml`) : https://elfried96.github.io/onelook-alert_Elf/, actif une fois le compte débloqué.
+
+`site_url` prend `READTHEDOCS_CANONICAL_URL` sur Read the Docs, l'adresse GitHub Pages sinon.

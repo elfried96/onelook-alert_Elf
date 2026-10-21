@@ -1,7 +1,8 @@
 site_name: One Look
 site_description: Modèle d'IA léger et embarquable qui analyse une image satellite en une seule passe et décide si elle mérite une alerte.
 site_author: elfried96
-site_url: https://elfried96.github.io/onelook-alert_Elf/
+# Read the Docs fournit sa propre adresse ; sinon, celle de GitHub Pages
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, "https://elfried96.github.io/onelook-alert_Elf/"]
 repo_url: https://github.com/elfried96/onelook-alert_Elf
 repo_name: elfried96/onelook-alert_Elf
 edit_uri: edit/main/docs/
