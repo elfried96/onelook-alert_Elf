@@ -9,9 +9,13 @@ Le sujet impose de documenter la provenance, les licences, la composition, le d�
 
 | Source | Contenu | Capteur | Licence | Utilisée pour |
 |---|---|---|---|---|
-| Sen1Floods11 | Inondations, 11 événements | Sentinel-1, Sentinel-2 | À vérifier | Alerte inondation |
+| Sen1Floods11 | Inondations, 11 événements, tuiles 512 × 512 | Sentinel-2 L1C (Sentinel-1 non utilisé) | À vérifier | Alerte inondation |
 | CloudSEN12 | Nuages et ombres | Sentinel-2 | À vérifier | Images normales difficiles |
 | CaBuAr | Zones brûlées, Californie | Sentinel-2 | À vérifier | Test de l'inconnu |
+
+## Format des images
+
+Toutes les images sont des **GeoTIFF Sentinel-2 de 512 × 512 pixels**, le format retenu avec le mentor pour l'évaluation. Les bandes conservées sont listées dans la page Cadrage.
 
 ## Composition
 

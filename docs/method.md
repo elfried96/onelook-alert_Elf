@@ -6,7 +6,7 @@ Le sujet demande de partir d'une approche simple, puis de l'améliorer pas à pa
 
 ```mermaid
 flowchart LR
-  A[Image satellite] --> B[Prétraitement<br/>bandes, normalisation]
+  A[GeoTIFF Sentinel-2<br/>512 × 512] --> B[Prétraitement<br/>sélection des bandes, normalisation]
   B --> C[Modèle léger<br/>une seule passe]
   C --> D{Score de confiance}
   D -->|connu| E[Normal ou Alerte]

@@ -2,7 +2,7 @@
 
 Projet de la Piscine Intelligence Lab · Makers (16 oct → 16 nov 2026, individuel). Mentor : Lilian Rage.
 Modèle d'IA léger et embarquable : une image satellite en entrée, une passe, une décision NORMAL / ALERTE / INCONNU.
-Anomalie visée : inondations (Sen1Floods11), à confirmer avec le mentor.
+Validé avec le mentor (21 oct) : inondations uniquement, images **Sentinel-2** (pas Sentinel-1), GeoTIFF multibande 512 × 512, choix des bandes libre. Données de base : Sen1Floods11 (S2 L1C). Question ouverte : images d'évaluation en L1C ou L2A ?
 
 ## Règles du projet
 
@@ -11,7 +11,7 @@ Anomalie visée : inondations (Sen1Floods11), à confirmer avec le mentor.
 - Chaque source de données et chaque modèle pré-entraîné est documenté avec sa licence dans `docs/data_card.md`.
 - Chaque approche testée est mesurée (précision, rappel, fausses alertes, taille Mo, temps ms) et ajoutée à `docs/results.md`.
 - Ne jamais versionner les données (`data/`) ni les poids (`checkpoints/`, `*.pt`, `*.onnx`).
-- Commits réguliers : l'activité GitHub est suivie par la plateforme de la piscine.
+- **Au moins un commit par jour** : l'activité GitHub est suivie par la plateforme de la piscine.
 
 ## Environnement
 

@@ -28,5 +28,7 @@ Les satellites produisent plus d'images qu'on ne peut en envoyer au sol. Un mod�
 |---|---|
 | Cadre | Piscine Intelligence Lab · Makers, projet individuel |
 | Période | 16 octobre → 16 novembre 2026 |
+| Données | Images Sentinel-2, GeoTIFF 512 × 512 pixels |
+| Anomalie | Inondations |
 | Outils | Python, PyTorch, TorchGeo, ONNX Runtime |
 | Code | [elfried96/onelook-alert_Elf](https://github.com/elfried96/onelook-alert_Elf) |
