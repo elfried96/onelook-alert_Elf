@@ -1,8 +1,12 @@
 # One Look
 
 Projet de la Piscine Intelligence Lab · Makers (16 oct → 16 nov 2026, individuel). Mentor : Lilian Rage.
-Modèle d'IA léger et embarquable : une image satellite en entrée, une passe, une décision NORMAL / ALERTE / INCONNU.
-Validé avec le mentor (21 oct) : inondations uniquement, images **Sentinel-2** (pas Sentinel-1), GeoTIFF multibande 512 × 512, choix des bandes libre. Données de base : Sen1Floods11 (S2 L1C). Question ouverte : images d'évaluation en L1C ou L2A ?
+Modèle d'IA léger et embarquable : une image satellite en entrée, une passe, une décision NORMAL / ALERTE · INONDATION / ALERTE · INCENDIE / INCONNU.
+Format validé avec le mentor (21 oct) : images **Sentinel-2** (pas Sentinel-1), GeoTIFF multibande 512 × 512, choix des bandes libre. Un seul type d'anomalie suffisait ; l'utilisateur a choisi le 23 oct d'en traiter deux.
+- Inondations : Sen1Floods11 (S2 L1C). Incendies (zones brûlées récentes) : CaBuAr (S2 L2A, Californie).
+- xBD écarté (Maxar RGB 0,5 m, incompatible Sentinel-2). Autres phénomènes (éruptions, glissements, marées noires) = test de l'inconnu, jamais en entraînement.
+- Point critique : harmoniser L1C et L2A, sinon le modèle apprend la source au lieu du phénomène. Question ouverte au mentor : évaluation en L1C ou L2A ?
+- Filet de sécurité : si les incendies prennent du retard, le modèle inondation seul reste un projet complet.
 
 ## Règles du projet
 

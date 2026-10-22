@@ -13,7 +13,8 @@ Pour chaque image, une décision :
 | Décision | Signification |
 |---|---|
 | **NORMAL** | Rien à signaler (nuages, rivières, lacs et champs compris) |
-| **ALERTE** | L'image contient une inondation |
+| **ALERTE · INONDATION** | L'image contient une inondation |
+| **ALERTE · INCENDIE** | L'image contient une zone brûlée récente |
 | **INCONNU** | L'image sort de ce que le modèle connaît, à vérifier au sol |
 
 ## Installation
