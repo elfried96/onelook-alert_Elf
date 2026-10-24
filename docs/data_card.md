@@ -9,8 +9,8 @@ Le sujet impose de documenter la provenance, les licences, la composition, le d�
 
 | Source | Contenu | Capteur | Licence | Utilisée pour |
 |---|---|---|---|---|
-| Sen1Floods11 | Inondations, 11 événements, tuiles 512 × 512 | Sentinel-2 L1C (Sentinel-1 non utilisé) | À vérifier | Alerte inondation |
-| CaBuAr | Zones brûlées, Californie, avant et après feu, tuiles 512 × 512 | Sentinel-2 L2A | À vérifier | Alerte incendie |
+| Sen1Floods11 | Inondations, 11 événements, 446 tuiles 512 × 512 annotées à la main | Sentinel-2 L1C (Sentinel-1 non utilisé) | À vérifier : aucune licence dans le dépôt GitHub | Alerte inondation |
+| CaBuAr | Zones brûlées, Californie, avant et après feu, 534 tuiles 512 × 512 | Sentinel-2 L2A (masques CAL FIRE) | CDLA-Permissive-2.0 | Alerte incendie |
 | CloudSEN12 | Nuages et ombres | Sentinel-2 | À vérifier | Images normales difficiles |
 | Copernicus Browser / Copernicus EMS | Éruptions, glissements de terrain, marées noires… | Sentinel-2 | À vérifier | Test de l'inconnu |
 | xBD / xView2 | Dégâts aux bâtiments | Maxar, RGB ~0,5 m | – | **Écarté** : résolution et capteur incompatibles avec Sentinel-2 (voir Cadrage) |
@@ -42,7 +42,42 @@ Risques de fuite identifiés :
 | Tuiles voisines d'une même scène réparties entre entraînement et test | Découpage par événement |
 | Niveau L1C pour les inondations, L2A pour les incendies : le modèle reconnaîtrait la source au lieu du phénomène | Harmonisation au même niveau |
 | Avant et après d'un même feu dans deux parties différentes | Un feu entier dans une seule partie |
-| Toutes les zones brûlées en Californie | Test sur des feux d'autres régions
+| Toutes les zones brûlées en Californie | Test sur des feux d'autres régions  |
+
+## Premiers constats (exploration du 24 octobre)
+
+Source : `notebooks/01_exploration.ipynb`, sur 6 tuiles Sen1Floods11 et 3 tuiles CaBuAr, plus les masques des 446 tuiles Sen1Floods11.
+
+**Sen1Floods11**
+
+| Pays | Tuiles | | Pays | Tuiles |
+|---|---|---|---|---|
+| USA | 69 | | Somalie | 26 |
+| Inde | 68 | | Nigeria | 18 |
+| Paraguay | 67 | | Bolivie | 15 |
+| Ghana | 53 | | Espagne | 30 |
+| Sri Lanka | 42 | | Mékong | 30 |
+| Pakistan | 28 | | | |
+
+En moyenne, 86 % des pixels d'une tuile sont visibles (le reste : nuages ou hors image).
+
+| Seuil de part inondée | Tuiles en alerte | Part des tuiles |
+|---|---|---|
+| 1 % | 273 | 61 % |
+| 2 % | 216 | 48 % |
+| 5 % | 139 | 31 % |
+| 10 % | 89 | 20 % |
+| 20 % | 43 | 10 % |
+
+Sen1Floods11 ne contient que des scènes d'inondation : il faudra d'autres sources pour les images normales.
+
+**Constats**
+
+- L'eau d'inondation est souvent boueuse : marron en couleurs naturelles, mais noire en infrarouge.
+- NDWI > 0, sans apprentissage, s'accorde à 73-97 % des pixels sur les tuiles inondées et à 100 % sur les tuiles sèches.
+- **L'eau a aussi un NBR très bas** : sur une tuile CaBuAr côtière, l'océan (NBR −0,46) est plus bas que la zone brûlée (−0,31). Le NBR seul confondrait mer et brûlé.
+- **L1C et L2A diffèrent fortement**, surtout en SWIR : médiane de B12 à 0,05 dans Sen1Floods11 contre 0,23 dans CaBuAr. Une partie vient du niveau de traitement, une partie des paysages. L'harmonisation est indispensable.
+- Les tuiles CaBuAr examinées sont peu brûlées (3 à 10 %) : il faudra en parcourir davantage. À vérifier : le décalage de +1 000 appliqué aux images L2A depuis janvier 2022.
 
 ## Biais et limites
 

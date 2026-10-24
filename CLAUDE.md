@@ -28,6 +28,8 @@ Format validé avec le mentor (21 oct) : images **Sentinel-2** (pas Sentinel-1),
   - Ajouter une dépendance : `uv add <paquet>` (`uv add --group dev <paquet>` pour les outils)
   - Doc en local : `uv run mkdocs serve`
   - Tests : `uv run pytest`
+  - Échantillon de données : `uv run python scripts/download_samples.py` (CaBuAr lu à distance via fsspec + h5py + hdf5plugin)
+- Groupes : `train` (torch, torchgeo, onnx) et `demo` (gradio) ne s'installent que sur demande (`uv sync --group train`), jamais en local pour entraîner.
 
 ## Design
 
