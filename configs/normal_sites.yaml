@@ -1,0 +1,50 @@
+# Catalogue des images « normales » : aucune inondation ni zone brûlée récente.
+#
+# Deux familles :
+# - paysages variés, pour que le modèle connaisse le monde « ordinaire » ;
+# - pièges, qui ressemblent à une anomalie sans en être une (voir la page Cadrage).
+#
+# Chaque site donne une tuile de 512 × 512 pixels à 10 m, centrée sur (lat, lon),
+# prise sur la période indiquée. Sentinel-2 ne photographie la mer que jusqu'à ~20 km des côtes.
+# clouds : clear = la moins nuageuse, cloudy = volontairement nuageuse.
+# group : regroupe les sites proches pour le découpage entraînement / test (jamais de fuite entre groupes).
+
+defaults:
+  start: 2021-01-01
+  end: 2021-12-31
+  clouds: clear
+
+sites:
+  # --- Paysages variés -------------------------------------------------------
+  - {name: amazonie_foret, lat: -3.47, lon: -62.22, category: foret_tropicale, group: amerique_sud}
+  - {name: congo_foret, lat: 0.50, lon: 21.00, category: foret_tropicale, group: afrique_centrale}
+  - {name: sahara_desert, lat: 21.00, lon: 25.00, category: desert, group: afrique_nord}
+  - {name: sahel_savane, lat: 13.50, lon: -0.50, category: savane, group: afrique_ouest, start: 2021-10-15, end: 2021-12-31}
+  - {name: beauce_cultures, lat: 48.30, lon: 1.60, category: agriculture, group: europe_ouest}
+  - {name: kansas_cultures, lat: 38.00, lon: -98.50, category: agriculture, group: amerique_nord}
+  - {name: mongolie_steppe, lat: 47.00, lon: 105.00, category: steppe, group: asie_centrale, start: 2021-06-01, end: 2021-09-30}
+  - {name: finlande_toundra, lat: 68.00, lon: 25.00, category: toundra, group: europe_nord, start: 2021-07-01, end: 2021-08-31}
+  - {name: sumatra_palmiers, lat: 0.50, lon: 101.50, category: plantations, group: asie_sud_est}
+  - {name: californie_collines, lat: 38.00, lon: -120.50, category: californie_sans_feu, group: californie_nord, start: 2021-04-01, end: 2021-06-30}
+  - {name: californie_sud_chaparral, lat: 33.50, lon: -117.00, category: californie_sans_feu, group: californie_sud, start: 2021-05-01, end: 2021-07-31}
+
+  # --- Pièges pour l'alerte inondation ----------------------------------------
+  - {name: niger_niamey_fleuve, lat: 13.51, lon: 2.11, category: riviere, group: afrique_ouest}
+  - {name: leman_lac, lat: 46.45, lon: 6.55, category: lac, group: europe_ouest}
+  - {name: cotonou_lagune, lat: 6.37, lon: 2.39, category: lagune_ville, group: afrique_ouest}
+  - {name: lagos_lagune, lat: 6.52, lon: 3.38, category: lagune_ville, group: afrique_ouest}
+  - {name: bretagne_littoral, lat: 48.60, lon: -4.50, category: littoral, group: europe_ouest}
+  - {name: golfe_guinee_ocean, lat: 6.25, lon: 2.20, category: ocean, group: afrique_ouest}
+  - {name: mekong_rizieres, lat: 10.45, lon: 105.35, category: rizieres, group: asie_sud_est, start: 2021-01-01, end: 2021-03-31}
+  - {name: alpes_neige, lat: 45.90, lon: 6.90, category: neige, group: europe_ouest, start: 2021-01-15, end: 2021-03-15}
+  - {name: saskatchewan_neige, lat: 52.00, lon: -106.00, category: neige, group: amerique_nord, start: 2021-01-15, end: 2021-03-15}
+  - {name: uyuni_salar, lat: -20.13, lon: -67.49, category: salar, group: amerique_sud}
+  - {name: everest_relief, lat: 27.98, lon: 86.92, category: ombres_relief, group: himalaya, start: 2021-10-01, end: 2021-12-31}
+  - {name: gabon_nuages, lat: 0.00, lon: 11.50, category: nuages, group: afrique_centrale, clouds: cloudy}
+  - {name: bengale_nuages, lat: 23.00, lon: 90.00, category: nuages, group: asie_sud, start: 2021-06-15, end: 2021-08-31, clouds: cloudy}
+
+  # --- Pièges pour l'alerte incendie ------------------------------------------
+  - {name: ukraine_labours, lat: 49.20, lon: 34.90, category: sol_sombre_laboure, group: europe_est, start: 2021-10-01, end: 2021-11-15}
+  - {name: lanzarote_lave, lat: 29.00, lon: -13.78, category: roche_volcanique, group: atlantique}
+  - {name: los_angeles_ville, lat: 34.05, lon: -118.25, category: ville_asphalte, group: californie_sud}
+  - {name: paris_ville, lat: 48.86, lon: 2.35, category: ville_asphalte, group: europe_ouest}

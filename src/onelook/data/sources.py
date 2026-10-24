@@ -81,6 +81,10 @@ def read_band_stack(path: Path) -> np.ndarray:
         return src.read()
 
 
+def load_json(path: Path) -> object:
+    return json.loads(path.read_text())
+
+
 def save_json(obj: object, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(obj, indent=2, ensure_ascii=False))

@@ -81,7 +81,7 @@ Passer de 13 à 6 bandes allège le modèle. L'effet de ce choix sera mesuré.
 
 Sen1Floods11 est en niveau **L1C** (réflectance au sommet de l'atmosphère). CaBuAr est en niveau **L2A** (réflectance de surface). Les valeurs des pixels n'ont pas le même sens.
 
-Mélanger les deux sans précaution crée une **fuite** : le modèle apprendrait « L1C = inondation, L2A = incendie » au lieu de reconnaître l'eau et le brûlé. Toutes les images seront donc ramenées au même niveau, en retéléchargeant les scènes Sentinel-2 aux mêmes lieux et aux mêmes dates. Le niveau retenu sera celui des images d'évaluation.
+Mélanger les deux sans précaution crée une **fuite** : le modèle apprendrait « L1C = inondation, L2A = incendie » au lieu de reconnaître l'eau et le brûlé. Toutes les images sont donc relues en **L2A depuis une source unique** (Microsoft Planetary Computer), aux mêmes lieux et aux mêmes dates. La méthode et les contrôles sont décrits dans le carnet de données. Si le mentor indique que l'évaluation sera en L1C, la même méthode s'appliquera avec une source L1C.
 
 ## Question ouverte
 

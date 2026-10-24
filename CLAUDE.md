@@ -5,7 +5,9 @@ Modèle d'IA léger et embarquable : une image satellite en entrée, une passe, 
 Format validé avec le mentor (21 oct) : images **Sentinel-2** (pas Sentinel-1), GeoTIFF multibande 512 × 512, choix des bandes libre. Un seul type d'anomalie suffisait ; l'utilisateur a choisi le 23 oct d'en traiter deux.
 - Inondations : Sen1Floods11 (S2 L1C). Incendies (zones brûlées récentes) : CaBuAr (S2 L2A, Californie).
 - xBD écarté (Maxar RGB 0,5 m, incompatible Sentinel-2). Autres phénomènes (éruptions, glissements, marées noires) = test de l'inconnu, jamais en entraînement.
-- Point critique : harmoniser L1C et L2A, sinon le modèle apprend la source au lieu du phénomène. Question ouverte au mentor : évaluation en L1C ou L2A ?
+- Harmonisation (25 oct) : toutes les tuiles, toutes classes, relues en **L2A depuis Planetary Computer** (`onelook.data.l2a`), 10 m, 512 × 512, réflectance × 10 000 (décalage baseline ≥ 04.00 retiré), + carte SCL. Sinon le modèle apprend la source au lieu du phénomène. Question ouverte au mentor : évaluation en L1C ou L2A ? (si L1C : Copernicus Data Space).
+- CaBuAr pré-découpé : numéros de tuiles renumérotés et pas de géoréférence → position retrouvée par corrélation B08 basse résolution (`scripts/harmonize_samples.py`).
+- Images normales : catalogue `configs/normal_sites.yaml` (paysages variés + pièges), `scripts/fetch_normals.py`. Champ `group` = unité de découpage train/test.
 - Filet de sécurité : si les incendies prennent du retard, le modèle inondation seul reste un projet complet.
 
 ## Règles du projet

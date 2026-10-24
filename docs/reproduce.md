@@ -22,6 +22,15 @@ Le script télécharge les masques des 446 tuiles Sen1Floods11, quelques images 
 
 L'exploration se trouve dans `notebooks/01_exploration.ipynb`.
 
+Harmonisation en L2A (même source pour toutes les classes) et images normales :
+
+```bash
+uv run python scripts/harmonize_samples.py
+uv run python scripts/fetch_normals.py
+```
+
+Les tuiles harmonisées sont écrites dans `data/harmonized/`, avec un rapport `report.json` par source.
+
 Le jeu complet et sa préparation seront ajoutés dans `scripts/`.
 
 ## Entraînement et évaluation

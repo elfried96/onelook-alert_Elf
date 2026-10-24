@@ -21,6 +21,12 @@ dependencies = [
     "pyyaml>=6.0",
     "tqdm>=4.66",
     "onnxruntime>=1.18",
+    "pystac-client>=0.9.1",
+    "pyproj>=3.8.0",
+    "affine>=3.0.1",
+    "planetary-computer>=1.0.0",
+    "pandas>=3.0.6",
+    "pyarrow>=26.0.0",
 ]
 
 [dependency-groups]
