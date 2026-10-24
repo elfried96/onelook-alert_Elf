@@ -73,7 +73,8 @@ Sen1Floods11 ne contient que des scènes d'inondation : il faudra d'autres sourc
 
 **Constats**
 
-- L'eau d'inondation est souvent boueuse : marron en couleurs naturelles, mais noire en infrarouge.
+- L'eau d'inondation est souvent boueuse : marron en couleurs naturelles, mais très sombre dans la bande B08 (proche infrarouge), d'où sa couleur bleu-cyan dans la composition infrarouge.
+- Les annotations ne marquent pas toujours la brume et les nuages fins : une tuile du Ghana est voilée mais comptée visible à 100 %.
 - NDWI > 0, sans apprentissage, s'accorde à 73-97 % des pixels sur les tuiles inondées et à 100 % sur les tuiles sèches.
 - **L'eau a aussi un NBR très bas** : sur une tuile CaBuAr côtière, l'océan (NBR −0,46) est plus bas que la zone brûlée (−0,31). Le NBR seul confondrait mer et brûlé.
 - **L1C et L2A diffèrent fortement**, surtout en SWIR : médiane de B12 à 0,05 dans Sen1Floods11 contre 0,23 dans CaBuAr. Une partie vient du niveau de traitement, une partie des paysages. L'harmonisation est indispensable.
