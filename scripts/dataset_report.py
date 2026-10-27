@@ -12,16 +12,11 @@ import numpy as np
 import pandas as pd
 
 from onelook.data.labels import LabelRules, add_labels
+from onelook.data.splits import haversine_km
 
 ROOT = Path(__file__).resolve().parents[1]
 DATASET = ROOT / "data" / "dataset"
 LEAK_DISTANCE_KM = 10  # deux tuiles de parties différentes à moins de 10 km : risque de fuite
-
-
-def haversine_km(lat1, lon1, lat2, lon2):
-    lat1, lon1, lat2, lon2 = map(np.radians, (lat1, lon1, lat2, lon2))
-    a = np.sin((lat2 - lat1) / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin((lon2 - lon1) / 2) ** 2
-    return 6371 * 2 * np.arcsin(np.sqrt(a))
 
 
 def spatial_leaks(df: pd.DataFrame) -> pd.DataFrame:

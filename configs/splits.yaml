@@ -1,22 +1,31 @@
 # Découpage entraînement / validation / test, par groupe : jamais par tuile au hasard.
-# Un groupe entier (pays d'une inondation, pli CaBuAr, région pour les normales) va dans une seule partie,
+# Un groupe entier (pays d'une inondation, zone CaBuAr, région pour les normales) va dans une seule partie,
 # pour que l'évaluation porte sur des zones et des dates jamais vues.
 #
 # Inondations (groupe = pays de l'événement Sen1Floods11) :
 #   test : Bolivie, Espagne, Sri Lanka (trois continents) · validation : Nigeria, Somalie
-# Incendies (groupe = pli CaBuAr, 5 plis) : test = pli 0, validation = pli 1, entraînement = plis 2 à 4.
+# Incendies (groupe = zone spatiale CaBuAr, calculée à l'indexation) : les plis CaBuAr ne servent pas, car
+#   la même zone revient à plusieurs dates dans des plis différents (fuite constatée le 28 oct).
+#   Les tuiles à moins de distance_km l'une de l'autre forment une zone ; chaque zone entière va dans une
+#   partie, en visant les proportions ci-dessous de tuiles brûlées. Les images avant feu suivent leur zone.
 #   Limite : tous les feux sont en Californie, y compris en test.
 # Normales (groupe = région) : test = Asie du Sud, Australie, Himalaya, Californie du Sud ;
 #   validation = Europe du Nord, Afrique de l'Est, Afrique australe, Moyen-Orient.
 
 default: train
 
+cabuar_zones:
+  distance_km: 10
+  ratios:
+    train: 0.65
+    val: 0.15
+    test: 0.20
+
 groups:
   test:
     - Bolivia
     - Spain
     - Sri-Lanka
-    - cabuar_fold0
     - asie_sud
     - australie
     - himalaya
@@ -24,7 +33,6 @@ groups:
   val:
     - Nigeria
     - Somalia
-    - cabuar_fold1
     - europe_nord
     - afrique_est
     - afrique_australe
@@ -36,9 +44,6 @@ groups:
     - Pakistan
     - Paraguay
     - USA
-    - cabuar_fold2
-    - cabuar_fold3
-    - cabuar_fold4
     - amerique_sud
     - afrique_centrale
     - afrique_nord

@@ -25,6 +25,8 @@ import yaml
 from tqdm import tqdm
 
 from onelook.data import build, sources
+from onelook.data.labels import LabelRules
+from onelook.data.splits import assign_zones, haversine_km, spatial_zones
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data" / "raw"
@@ -100,6 +102,23 @@ def stage_normals(limit: int | None, workers: int) -> None:
     run_jobs(jobs, worker, log, workers, "Images normales")
 
 
+def cabuar_zone_splits(df: pd.DataFrame, config: dict) -> dict[str, str]:
+    """Regroupe les tuiles CaBuAr (et leurs images avant feu) en zones spatiales, renomme leur groupe en
+    « cabuar_zoneN » et renvoie la partie de chaque zone. Les plis CaBuAr ne suffisent pas : la même
+    zone revient à plusieurs dates dans des plis différents. Une normale du catalogue ou tirée au hasard
+    à moins de distance_km d'une tuile CaBuAr rejoint sa zone."""
+    cabuar = df["source"].str.startswith("cabuar")
+    lat, lon = df.loc[cabuar, "lat"].to_numpy(), df.loc[cabuar, "lon"].to_numpy()
+    near = [not c and bool((haversine_km(la, lo, lat, lon) < config["distance_km"]).any())
+            for c, la, lo in zip(cabuar, df["lat"], df["lon"])]
+    cabuar = cabuar | pd.Series(near, index=df.index)
+    zones = spatial_zones(df.loc[cabuar, "lat"], df.loc[cabuar, "lon"], config["distance_km"])
+    fire_alert = LabelRules.from_yaml(CONFIGS / "labels.yaml").fire_alert
+    burned = df.loc[cabuar, "frac_burned"].fillna(0).to_numpy() >= fire_alert
+    df.loc[cabuar, "group"] = [f"cabuar_zone{z}" for z in zones]
+    return {f"cabuar_zone{z}": split for z, split in assign_zones(zones, burned, config["ratios"]).items()}
+
+
 def stage_index() -> None:
     rows = []
     for name in ("floods", "fires", "normals"):
@@ -111,10 +130,11 @@ def stage_index() -> None:
         df["error"] = None
     errors = df[df["error"].notna()]
     df = df[df["error"].isna()].drop(columns="error").drop_duplicates("id", keep="last")
-    errors = errors[~errors["id"].isin(df["id"])]
+    errors = errors[~errors["id"].isin(df["id"])].drop_duplicates("id", keep="last")
 
     splits = yaml.safe_load((CONFIGS / "splits.yaml").read_text())
     group_split = {g: split for split, groups in splits["groups"].items() for g in groups}
+    group_split.update(cabuar_zone_splits(df, splits["cabuar_zones"]))
     df["split"] = df["group"].map(group_split).fillna(splits["default"])
     df["scenes"] = df["scenes"].map(lambda s: ";".join(s) if isinstance(s, list) else s)
     df.sort_values(["split", "source", "id"]).to_csv(DATASET / "index.csv", index=False)

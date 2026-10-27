@@ -72,26 +72,62 @@ Constats :
 
 ## Composition
 
-| Partie | Normal | Alerte · inondation | Alerte · incendie | Inconnu |
-|---|---|---|---|---|
-| Entraînement | – | – | – | – |
-| Validation | – | – | – | – |
-| Test | – | – | – | – |
+Jeu complet constitué le 28 octobre (`scripts/build_dataset.py`) : **3 228 tuiles** 512 × 512 à 10 m, 12 bandes L2A, environ 16 Go. Décision attendue de chaque tuile selon `configs/labels.yaml` : parts d'anomalie calculées sur la tuile entière, alerte à partir de 5 %, normale sous 0,5 %, ambiguë entre les deux.
 
-Les images « inconnu » ne servent qu'à la validation et au test, jamais à l'entraînement.
+| Partie | Normal | Alerte · inondation | Alerte · incendie | Ambiguë (écartée) | Total |
+|---|---|---|---|---|---|
+| Entraînement | 1 336 | 88 | 286 | 277 | 1 987 |
+| Validation | 396 | 15 | 66 | 53 | 530 |
+| Test | 494 | 25 | 88 | 104 | 711 |
+| **Total** | **2 226** | **128** | **440** | **434** | **3 228** |
+
+Origine des tuiles :
+
+| Source | Tuiles | Rôle |
+|---|---|---|
+| Sen1Floods11, relu en L2A | 434 | inondations, et normales quand l'eau d'inondation est absente |
+| CaBuAr, relu en L2A | 2 108 | zones brûlées ; les quarts non touchés sont des normales |
+| CaBuAr, image avant feu | 352 | normales : le même lieu, avant l'incendie |
+| Catalogue de sites | 149 | normales variées et pièges (neige, désert, lave, rizières…) |
+| Points au hasard | 185 | normales tirées dans 15 régions du monde |
+
+Pertes : 76 tâches n'ont pas abouti, soit 2,3 % :
+- 34 sites normaux sans passage assez clair ou assez nuageux ;
+- 20 tuiles L2A incomplètes au bord des orbites ;
+- 17 tuiles CaBuAr dont la lecture distante échoue à chaque essai ;
+- 5 tuiles CaBuAr dont la position n'a pas été retrouvée (corrélation trop faible).
+
+Les images « inconnu » (éruptions, glissements, marées noires) formeront un lot à part, seulement en test, jamais en entraînement.
 
 ## Découpage et risques de fuite
 
-Le découpage se fait **par événement et par région**, jamais au hasard entre tuiles. Deux tuiles voisines d'une même image ne peuvent pas se retrouver l'une en entraînement et l'autre en test.
+Le découpage se fait **par groupe**, jamais au hasard entre tuiles (`configs/splits.yaml`). Chaque groupe entier va dans une seule partie :
 
-Risques de fuite identifiés :
+- **Inondations :** groupe = pays de l'événement.
+  - Test : Bolivie, Espagne, Sri Lanka.
+  - Validation : Nigeria, Somalie.
+  - Entraînement : les six autres pays.
+- **Incendies :** groupe = zone spatiale.
+  - Les tuiles CaBuAr reliées de proche en proche à moins de 10 km forment une zone.
+  - Chaque zone entière va dans une partie, en visant 65 / 15 / 20 % des tuiles brûlées (`onelook.data.splits`).
+  - Une image avant feu, ou une normale située à moins de 10 km, suit sa zone.
+- **Normales du catalogue et points au hasard :** groupe = grande région.
+  - Test : Asie du Sud, Australie, Himalaya, Californie du Sud.
+  - Validation : Europe du Nord, Afrique de l'Est, Afrique australe, Moyen-Orient.
+
+Au total, 95 groupes vont en entraînement, 24 en validation et 25 en test.
+
+**Contrôle de fuite spatiale** (`scripts/dataset_report.py`) : aucune paire de tuiles de parties différentes à moins de 10 km.
+
+Ce contrôle a corrigé un premier découpage. Les plis fournis par CaBuAr séparent des scènes, pas des lieux : la même zone revient à plusieurs dates dans des plis différents. Le premier découpage, par pli, laissait 1 805 paires de tuiles de parties différentes à moins de 10 km, certaines au même endroit exact. Le site `californie_collines` du catalogue touchait aussi des zones CaBuAr de test.
 
 | Risque | Parade |
 |---|---|
-| Tuiles voisines d'une même scène réparties entre entraînement et test | Découpage par événement |
-| Niveau L1C pour les inondations, L2A pour les incendies : le modèle reconnaîtrait la source au lieu du phénomène | Harmonisation au même niveau |
-| Avant et après d'un même feu dans deux parties différentes | Un feu entier dans une seule partie |
-| Toutes les zones brûlées en Californie | Test sur des feux d'autres régions  |
+| Tuiles voisines d'une même scène réparties entre entraînement et test | Découpage par groupe, contrôle à 10 km |
+| Même lieu brûlé à plusieurs dates dans des parties différentes | Zones spatiales au lieu des plis CaBuAr |
+| Avant et après d'un même feu dans deux parties différentes | L'image avant feu suit sa zone |
+| Niveaux L1C et L2A mélangés : le modèle reconnaîtrait la source au lieu du phénomène | Tout relu en L2A depuis Planetary Computer |
+| Toutes les zones brûlées en Californie | Limite assumée ; test complémentaire sur des feux d'autres régions à prévoir |
 
 ## Premiers constats (exploration du 24 octobre)
 
@@ -131,4 +167,9 @@ Sen1Floods11 ne contient que des scènes d'inondation : il faudra d'autres sourc
 
 ## Biais et limites
 
-À documenter : répartition géographique, saisons, types de terrain, qualité des annotations.
+- **Californie surreprésentée chez les normales.** 1 764 des 2 226 normales, soit 79 %, sont des quarts CaBuAr non brûlés ou des images avant feu. Un modèle pourrait associer « paysage californien » et « feu ». Parades prévues : pondérer les normales par source à l'entraînement, et mesurer les fausses alertes séparément sur les normales hors Californie.
+- **Peu d'inondations.** 128 alertes seulement, dont 25 en test : les mesures de rappel sur les inondations auront une forte incertitude, à indiquer avec un intervalle.
+- **Inondations nuageuses.** Beaucoup de tuiles d'inondation sont prises en saison des pluies, avec des nuages : la part d'inondation est comptée sur la tuile entière, donc l'eau cachée ne déclenche pas d'alerte attendue.
+- **Feux d'une seule région et d'un seul type** (végétation méditerranéenne californienne) : la généralisation à d'autres biomes n'est pas garantie.
+- **Points au hasard non vérifiés un par un** : un point peut tomber sur une anomalie non annotée (crue locale, brûlis agricole).
+- **Tuiles ambiguës écartées** (434) : elles seront analysées à part, car c'est là que le modèle hésitera le plus.
