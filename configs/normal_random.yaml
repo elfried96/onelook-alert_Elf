@@ -1,0 +1,25 @@
+# Images normales tirées au hasard : un point et un mois au hasard par tirage, dans des boîtes régionales.
+# Elles complètent le catalogue avec des paysages « ordinaires » que l'on n'a pas choisis.
+# Limite connue : un tirage peut tomber par hasard sur une petite inondation ou un feu non répertorié.
+# group : unité de découpage, alignée sur les groupes du catalogue (configs/splits.yaml).
+
+seed: 2026
+years: [2019, 2020, 2021, 2022, 2023]
+
+boxes:
+  - {name: afrique_ouest, group: afrique_ouest, west: -12, south: 8, east: 10, north: 16, n: 20}
+  - {name: afrique_centrale, group: afrique_centrale, west: 12, south: -5, east: 28, north: 5, n: 10}
+  - {name: afrique_est, group: afrique_est, west: 30, south: -10, east: 42, north: 10, n: 15}
+  - {name: afrique_australe, group: afrique_australe, west: 15, south: -30, east: 32, north: -18, n: 12}
+  - {name: afrique_nord, group: afrique_nord, west: -8, south: 20, east: 30, north: 32, n: 12}
+  - {name: europe_ouest, group: europe_ouest, west: -5, south: 42, east: 15, north: 55, n: 15}
+  - {name: europe_est, group: europe_est, west: 15, south: 44, east: 40, north: 58, n: 12}
+  - {name: asie_centrale, group: asie_centrale, west: 50, south: 40, east: 90, north: 55, n: 15}
+  - {name: asie_sud, group: asie_sud, west: 72, south: 12, east: 90, north: 28, n: 15}
+  - {name: asie_est, group: asie_est, west: 100, south: 25, east: 120, north: 40, n: 15}
+  - {name: asie_sud_est, group: asie_sud_est, west: 98, south: 8, east: 108, north: 20, n: 10}
+  - {name: amerique_nord, group: amerique_nord, west: -110, south: 32, east: -80, north: 50, n: 20}
+  - {name: amerique_sud, group: amerique_sud, west: -70, south: -30, east: -45, north: 0, n: 20}
+  # Australie : 2021-2023 seulement, pour éviter les grands feux de 2019-2020
+  - {name: australie, group: australie, west: 118, south: -32, east: 150, north: -20, n: 15, years: [2021, 2022, 2023]}
+  - {name: moyen_orient, group: moyen_orient, west: 35, south: 20, east: 55, north: 35, n: 10}

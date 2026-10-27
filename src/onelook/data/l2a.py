@@ -11,6 +11,7 @@ réflectance × 10 000, la même convention que `onelook.data.sentinel2`.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from datetime import date, timedelta
 
@@ -83,16 +84,29 @@ class Grid:
         return cls(f"EPSG:{epsg}", Affine(resolution, 0, left, 0, -resolution, top), size, size)
 
 
+SEARCH_RETRIES = 5
+
+
+def _search_items(**kwargs):
+    """Recherche STAC avec nouvelles tentatives : le catalogue renvoie parfois des erreurs 504 passagères."""
+    for attempt in range(SEARCH_RETRIES):
+        try:
+            client = Client.open(STAC_URL, modifier=planetary_computer.sign_inplace)
+            return client.search(collections=[COLLECTION], **kwargs).item_collection()
+        except Exception:
+            if attempt == SEARCH_RETRIES - 1:
+                raise
+            time.sleep(5 * (attempt + 1))
+
+
 def search(grid: Grid, day: date, days_around: int = 0, max_cloud: float = 100):
     """Scènes L2A qui recoupent la tuile, de `day − days_around` à `day + days_around`."""
     start, end = day - timedelta(days=days_around), day + timedelta(days=days_around)
-    client = Client.open(STAC_URL, modifier=planetary_computer.sign_inplace)
-    items = client.search(
-        collections=[COLLECTION],
+    items = _search_items(
         bbox=grid.bounds_wgs84(),
         datetime=f"{start.isoformat()}T00:00:00Z/{end.isoformat()}T23:59:59Z",
         query={"eo:cloud_cover": {"lt": max_cloud}},
-    ).item_collection()
+    )
     # Les scènes les plus proches de la date, puis les moins nuageuses
     return sorted(
         items,
@@ -106,13 +120,11 @@ def search_period(grid: Grid, start: date, end: date, min_cloud: float = 0, max_
     Une tuile peut chevaucher plusieurs scènes d'un même passage : chaque groupe se mosaïque
     sans mélanger des dates différentes. Groupes triés du moins au plus nuageux.
     """
-    client = Client.open(STAC_URL, modifier=planetary_computer.sign_inplace)
-    items = client.search(
-        collections=[COLLECTION],
+    items = _search_items(
         bbox=grid.bounds_wgs84(),
         datetime=f"{start.isoformat()}T00:00:00Z/{end.isoformat()}T23:59:59Z",
         query={"eo:cloud_cover": {"gte": min_cloud, "lte": max_cloud}},
-    ).item_collection()
+    )
     by_day: dict[date, list] = {}
     for item in items:
         by_day.setdefault(item.datetime.date(), []).append(item)

@@ -22,16 +22,21 @@ Le script télécharge les masques des 446 tuiles Sen1Floods11, quelques images 
 
 L'exploration se trouve dans `notebooks/01_exploration.ipynb`.
 
-Harmonisation en L2A (même source pour toutes les classes) et images normales :
+### Jeu de données complet
+
+Toutes les tuiles, de toutes les classes, sont relues en Sentinel-2 L2A depuis la même source (Microsoft Planetary Computer). Le fichier CaBuAr pré-découpé (5,9 Go) est d'abord téléchargé dans `data/raw/cabuar/512x512.hdf5` :
 
 ```bash
-uv run python scripts/harmonize_samples.py
-uv run python scripts/fetch_normals.py
+curl -L -o data/raw/cabuar/512x512.hdf5 https://huggingface.co/datasets/DarthReca/california_burned_areas/resolve/main/raw/patched/512x512.hdf5
+uv run python scripts/build_dataset.py all
+uv run python scripts/dataset_report.py
 ```
 
-Les tuiles harmonisées sont écrites dans `data/harmonized/`, avec un rapport `report.json` par source.
+Chaque étape (`floods`, `fires`, `normals`, `index`) peut se lancer seule et reprend là où elle s'est arrêtée. Durée : environ une heure, surtout des lectures réseau. Résultat dans `data/dataset/` :
 
-Le jeu complet et sa préparation seront ajoutés dans `scripts/`.
+- `floods/`, `fires/`, `normals/` : une tuile GeoTIFF 12 bandes par image, sa carte SCL et, si elle existe, sa vérité terrain (`*_mask.tif`) ;
+- `index.csv` : une ligne par tuile, avec ses parts d'anomalie et sa partie (train, val, test) ;
+- `index_labels.csv` et `report.md` : décisions attendues selon `configs/labels.yaml`, et contrôle de fuite spatiale.
 
 ## Entraînement et évaluation
 

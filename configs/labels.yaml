@@ -1,0 +1,12 @@
+# Règles d'étiquetage : de la part d'anomalie d'une tuile à sa décision attendue.
+#
+# Les parts sont calculées sur la tuile entière (512 × 512 pixels), pas seulement sur sa partie visible :
+# une inondation cachée sous les nuages ne compte pas, car le modèle ne lance pas d'alerte sur ce qu'il ne voit pas.
+#
+# Entre « normal_max » et le seuil d'alerte, la tuile est ambiguë : un peu d'anomalie, pas assez pour alerter.
+# Elle est écartée de l'entraînement et de l'évaluation des alertes, et analysée à part.
+# Ces seuils sont une première proposition : leur effet sera mesuré, et ils seront justifiés dans la page Cadrage.
+
+flood_alert: 0.05   # au moins 5 % de la tuile (environ 1,3 km²) sous l'eau d'inondation visible
+fire_alert: 0.05    # au moins 5 % de la tuile brûlée récemment
+normal_max: 0.005   # moins de 0,5 % : la tuile est normale

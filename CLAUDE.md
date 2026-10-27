@@ -6,8 +6,9 @@ Format validé avec le mentor (21 oct) : images **Sentinel-2** (pas Sentinel-1),
 - Inondations : Sen1Floods11 (S2 L1C). Incendies (zones brûlées récentes) : CaBuAr (S2 L2A, Californie).
 - xBD écarté (Maxar RGB 0,5 m, incompatible Sentinel-2). Autres phénomènes (éruptions, glissements, marées noires) = test de l'inconnu, jamais en entraînement.
 - Harmonisation (25 oct) : toutes les tuiles, toutes classes, relues en **L2A depuis Planetary Computer** (`onelook.data.l2a`), 10 m, 512 × 512, réflectance × 10 000 (décalage baseline ≥ 04.00 retiré), + carte SCL. Sinon le modèle apprend la source au lieu du phénomène. Question ouverte au mentor : évaluation en L1C ou L2A ? (si L1C : Copernicus Data Space).
-- CaBuAr pré-découpé : numéros de tuiles renumérotés et pas de géoréférence → position retrouvée par corrélation B08 basse résolution (`scripts/harmonize_samples.py`).
-- Images normales : catalogue `configs/normal_sites.yaml` (paysages variés + pièges), `scripts/fetch_normals.py`. Champ `group` = unité de découpage train/test.
+- CaBuAr pré-découpé : numéros de tuiles renumérotés et pas de géoréférence → position retrouvée par corrélation B08 basse résolution (`onelook.data.build.CabuarScene`). Chaque tuile CaBuAr (10 km, 20 m) → 4 tuiles 512 à 10 m + 1 image avant feu (normale).
+- Jeu complet : `scripts/build_dataset.py` (étapes floods / fires / normals / index, reprise automatique) → `data/dataset/index.csv`. Normales : `configs/normal_sites.yaml` (sites × 4 années) + `configs/normal_random.yaml` (points au hasard).
+- Découpage par groupe : `configs/splits.yaml` (pays Sen1Floods11, pli CaBuAr, région). Étiquettes : `configs/labels.yaml` + `onelook.data.labels` (parts sur la tuile entière, zone ambiguë écartée). Rapport et contrôle de fuite spatiale : `scripts/dataset_report.py`.
 - Filet de sécurité : si les incendies prennent du retard, le modèle inondation seul reste un projet complet.
 
 ## Règles du projet

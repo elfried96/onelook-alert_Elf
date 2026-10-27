@@ -9,10 +9,13 @@
 # clouds : clear = la moins nuageuse, cloudy = volontairement nuageuse.
 # group : regroupe les sites proches pour le découpage entraînement / test (jamais de fuite entre groupes).
 
+# years : une tuile par année, sur la même fenêtre saisonnière (les dates start / end donnent le jour et le mois).
+
 defaults:
   start: 2021-01-01
   end: 2021-12-31
   clouds: clear
+  years: [2019, 2020, 2021, 2022]
 
 sites:
   # --- Paysages variés -------------------------------------------------------
@@ -48,3 +51,16 @@ sites:
   - {name: lanzarote_lave, lat: 29.00, lon: -13.78, category: roche_volcanique, group: atlantique}
   - {name: los_angeles_ville, lat: 34.05, lon: -118.25, category: ville_asphalte, group: californie_sud}
   - {name: paris_ville, lat: 48.86, lon: 2.35, category: ville_asphalte, group: europe_ouest}
+
+  # --- Pièges en double, dans des régions de validation / test ----------------
+  # Chaque piège doit aussi exister hors entraînement, sinon on ne mesure pas s'il est vraiment évité.
+  - {name: gange_varanasi_fleuve, lat: 25.31, lon: 83.01, category: riviere, group: asie_sud, start: 2021-01-01, end: 2021-04-30}
+  - {name: bangladesh_rizieres, lat: 24.20, lon: 89.20, category: rizieres, group: asie_sud, start: 2021-01-01, end: 2021-03-31}
+  - {name: sydney_littoral_ville, lat: -33.87, lon: 151.21, category: littoral, group: australie}
+  - {name: australie_ble_labours, lat: -31.50, lon: 117.50, category: sol_sombre_laboure, group: australie, start: 2021-04-01, end: 2021-06-15}
+  - {name: australie_desert, lat: -25.30, lon: 131.00, category: desert, group: australie}
+  - {name: victoria_lac, lat: 0.30, lon: 32.62, category: lac, group: afrique_est}
+  - {name: islande_lave, lat: 63.95, lon: -21.40, category: roche_volcanique, group: europe_nord, start: 2021-06-01, end: 2021-09-15}
+  - {name: islande_neige, lat: 64.60, lon: -17.50, category: neige, group: europe_nord, start: 2021-03-01, end: 2021-05-15}
+  - {name: namibie_desert, lat: -24.70, lon: 15.30, category: desert, group: afrique_australe}
+  - {name: dubai_ville_desert, lat: 25.20, lon: 55.27, category: ville_asphalte, group: moyen_orient}

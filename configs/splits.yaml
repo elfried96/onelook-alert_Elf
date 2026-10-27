@@ -1,0 +1,53 @@
+# Découpage entraînement / validation / test, par groupe : jamais par tuile au hasard.
+# Un groupe entier (pays d'une inondation, pli CaBuAr, région pour les normales) va dans une seule partie,
+# pour que l'évaluation porte sur des zones et des dates jamais vues.
+#
+# Inondations (groupe = pays de l'événement Sen1Floods11) :
+#   test : Bolivie, Espagne, Sri Lanka (trois continents) · validation : Nigeria, Somalie
+# Incendies (groupe = pli CaBuAr, 5 plis) : test = pli 0, validation = pli 1, entraînement = plis 2 à 4.
+#   Limite : tous les feux sont en Californie, y compris en test.
+# Normales (groupe = région) : test = Asie du Sud, Australie, Himalaya, Californie du Sud ;
+#   validation = Europe du Nord, Afrique de l'Est, Afrique australe, Moyen-Orient.
+
+default: train
+
+groups:
+  test:
+    - Bolivia
+    - Spain
+    - Sri-Lanka
+    - cabuar_fold0
+    - asie_sud
+    - australie
+    - himalaya
+    - californie_sud
+  val:
+    - Nigeria
+    - Somalia
+    - cabuar_fold1
+    - europe_nord
+    - afrique_est
+    - afrique_australe
+    - moyen_orient
+  train:
+    - Ghana
+    - India
+    - Mekong
+    - Pakistan
+    - Paraguay
+    - USA
+    - cabuar_fold2
+    - cabuar_fold3
+    - cabuar_fold4
+    - amerique_sud
+    - afrique_centrale
+    - afrique_nord
+    - afrique_ouest
+    - europe_ouest
+    - europe_est
+    - amerique_nord
+    - asie_centrale
+    - asie_est
+    - asie_sud_est
+    - californie_nord
+    - atlantique
