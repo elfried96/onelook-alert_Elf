@@ -36,6 +36,28 @@ Deux mesures par tuile dans l'index :
 - `frac_permanent_jrc` : part de la tuile en eau permanente ;
 - `scl_water_outside_jrc` : part de la tuile où l'image montre de l'eau (carte SCL) hors de l'eau permanente. Sur une normale, une valeur élevée signale une inondation possible non annotée.
 
+**Pièges d'eau permanente parmi les normales** (ajout du 2 novembre : 21 sites × 4 années) :
+
+| Catégorie | Entraînement | Validation | Test |
+|---|---|---|---|
+| Océan | 12 | 8 | 12 |
+| Littoral | 4 | 0 | 8 |
+| Estuaire | 4 | 4 | 4 |
+| Lac | 4 | 4 | 4 |
+| Réservoir | 8 | 4 | 4 |
+| Rivière, fleuve | 8 | 8 | 12 |
+| Lagune en ville | 8 | 0 | 0 |
+| Rizières | 3 | 0 | 4 |
+| **Total** | **51** | **28** | **48** |
+
+**Contrôle des normales :** 24 normales montrent de l'eau hors de l'eau permanente sur au moins 5 % de la tuile. Vérifiées à l'œil, aucune ne cache une inondation non annotée. Ce sont quatre cas, tous normaux :
+- réservoirs dont le niveau varie : berges noyées au-delà de la limite des 50 % (Volta, lacs de retenue californiens) ;
+- rizières inondées (vallée de Sacramento) ;
+- erreurs de la carte SCL, qui prend pour de l'eau la lave sombre de Lanzarote et les ombres des immeubles de Paris ;
+- eau saisonnière naturelle (salar d'Uyuni sous une fine pellicule d'eau, zone humide en Australie).
+
+Conséquence : « eau hors de l'eau permanente » ne veut pas dire « inondation ». Le modèle doit aussi apprendre ces cas, et la carte SCL ne peut pas servir seule à repérer l'eau.
+
 La carte n'est pas une entrée du modèle : il doit décider à partir de l'image seule. Elle sert à vérifier les étiquettes et à mesurer à part les fausses alertes sur l'eau permanente. L'embarquer à bord, en version compressée, reste une piste à évaluer.
 
 ## Format des images
@@ -95,14 +117,14 @@ Constats :
 
 ## Composition
 
-Jeu complet constitué le 28 octobre (`scripts/build_dataset.py`) : **3 228 tuiles** 512 × 512 à 10 m, 12 bandes L2A, environ 16 Go. Décision attendue de chaque tuile selon `configs/labels.yaml` : parts d'anomalie calculées sur la tuile entière, alerte à partir de 5 %, normale sous 0,5 %, ambiguë entre les deux.
+Jeu complet constitué le 28 octobre et complété le 2 novembre (`scripts/build_dataset.py`) : **3 312 tuiles** 512 × 512 à 10 m, 12 bandes L2A, environ 16 Go. Décision attendue de chaque tuile selon `configs/labels.yaml` : parts d'anomalie calculées sur la tuile entière, alerte à partir de 5 %, normale sous 0,5 %, ambiguë entre les deux.
 
 | Partie | Normal | Alerte · inondation | Alerte · incendie | Ambiguë (écartée) | Total |
 |---|---|---|---|---|---|
-| Entraînement | 1 336 | 88 | 286 | 277 | 1 987 |
-| Validation | 396 | 15 | 66 | 53 | 530 |
-| Test | 494 | 25 | 88 | 104 | 711 |
-| **Total** | **2 226** | **128** | **440** | **434** | **3 228** |
+| Entraînement | 1 360 | 88 | 286 | 277 | 2 011 |
+| Validation | 420 | 15 | 66 | 53 | 554 |
+| Test | 530 | 25 | 88 | 104 | 747 |
+| **Total** | **2 310** | **128** | **440** | **434** | **3 312** |
 
 Origine des tuiles :
 
@@ -111,7 +133,7 @@ Origine des tuiles :
 | Sen1Floods11, relu en L2A | 434 | inondations, et normales quand l'eau d'inondation est absente |
 | CaBuAr, relu en L2A | 2 108 | zones brûlées ; les quarts non touchés sont des normales |
 | CaBuAr, image avant feu | 352 | normales : le même lieu, avant l'incendie |
-| Catalogue de sites | 149 | normales variées et pièges (neige, désert, lave, rizières…) |
+| Catalogue de sites | 233 | normales variées et pièges (neige, désert, lave, rizières, océans, fleuves, réservoirs…) |
 | Points au hasard | 185 | normales tirées dans 15 régions du monde |
 
 Pertes : 76 tâches n'ont pas abouti, soit 2,3 % :
@@ -190,7 +212,7 @@ Sen1Floods11 ne contient que des scènes d'inondation : il faudra d'autres sourc
 
 ## Biais et limites
 
-- **Californie surreprésentée chez les normales.** 1 764 des 2 226 normales, soit 79 %, sont des quarts CaBuAr non brûlés ou des images avant feu. Un modèle pourrait associer « paysage californien » et « feu ». Parades prévues : pondérer les normales par source à l'entraînement, et mesurer les fausses alertes séparément sur les normales hors Californie.
+- **Californie surreprésentée chez les normales.** 1 764 des 2 310 normales, soit 76 %, sont des quarts CaBuAr non brûlés ou des images avant feu. Un modèle pourrait associer « paysage californien » et « feu ». Parades prévues : pondérer les normales par source à l'entraînement, et mesurer les fausses alertes séparément sur les normales hors Californie.
 - **Peu d'inondations.** 128 alertes seulement, dont 25 en test : les mesures de rappel sur les inondations auront une forte incertitude, à indiquer avec un intervalle.
 - **Inondations nuageuses.** Beaucoup de tuiles d'inondation sont prises en saison des pluies, avec des nuages : la part d'inondation est comptée sur la tuile entière, donc l'eau cachée ne déclenche pas d'alerte attendue.
 - **Feux d'une seule région et d'un seul type** (végétation méditerranéenne californienne) : la généralisation à d'autres biomes n'est pas garantie.

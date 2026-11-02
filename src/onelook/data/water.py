@@ -29,7 +29,8 @@ def read_occurrence(grid: Grid) -> np.ndarray:
         for item in items:
             with rasterio.open(item.assets["occurrence"].href) as src, WarpedVRT(
                 src, crs=grid.crs, transform=grid.transform, width=grid.width, height=grid.height,
-                resampling=Resampling.nearest, nodata=NO_DATA,
+                # src_nodata explicite : sinon GDAL change la pleine mer (255) en 254 pour la distinguer du vide
+                resampling=Resampling.nearest, src_nodata=NO_DATA, nodata=NO_DATA,
             ) as vrt:
                 tile = vrt.read(1)
             fill = (occurrence == NO_DATA) & (tile != NO_DATA)
