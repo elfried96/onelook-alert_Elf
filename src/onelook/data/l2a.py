@@ -87,12 +87,12 @@ class Grid:
 SEARCH_RETRIES = 5
 
 
-def _search_items(**kwargs):
+def _search_items(collection: str = COLLECTION, **kwargs):
     """Recherche STAC avec nouvelles tentatives : le catalogue renvoie parfois des erreurs 504 passagères."""
     for attempt in range(SEARCH_RETRIES):
         try:
             client = Client.open(STAC_URL, modifier=planetary_computer.sign_inplace)
-            return client.search(collections=[COLLECTION], **kwargs).item_collection()
+            return client.search(collections=[collection], **kwargs).item_collection()
         except Exception:
             if attempt == SEARCH_RETRIES - 1:
                 raise

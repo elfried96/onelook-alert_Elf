@@ -11,9 +11,32 @@ Le sujet impose de documenter la provenance, les licences, la composition, le d�
 |---|---|---|---|---|
 | Sen1Floods11 | Inondations, 11 événements, 446 tuiles 512 × 512 annotées à la main | Sentinel-2 L1C (Sentinel-1 non utilisé) | À vérifier : aucune licence dans le dépôt GitHub | Alerte inondation |
 | CaBuAr | Zones brûlées, Californie, avant et après feu, 534 tuiles 512 × 512 | Sentinel-2 L2A (masques CAL FIRE) | CDLA-Permissive-2.0 | Alerte incendie |
+| JRC Global Surface Water 1984-2020 (Planetary Computer, `jrc-gsw`) | Occurrence de l'eau par pixel, 30 m | Landsat | Réutilisation libre avec citation (Commission européenne, JRC) — à confirmer | Eau permanente : océans, lacs, cours d'eau (étiquettes et évaluation, pas entrée du modèle) |
 | CloudSEN12 | Nuages et ombres | Sentinel-2 | À vérifier | Images normales difficiles |
 | Copernicus Browser / Copernicus EMS | Éruptions, glissements de terrain, marées noires… | Sentinel-2 | À vérifier | Test de l'inconnu |
 | xBD / xView2 | Dégâts aux bâtiments | Maxar, RGB ~0,5 m | – | **Écarté** : résolution et capteur incompatibles avec Sentinel-2 (voir Cadrage) |
+
+## Eau permanente : océans, lacs et cours d'eau
+
+Une inondation, c'est de l'eau **là où il n'y en a pas d'habitude**. Pour le savoir sur chaque tuile, la carte JRC Global Surface Water est lue sur la grille de la tuile et enregistrée à côté d'elle (`*_water.tif`, étape `water` de `scripts/build_dataset.py`, module `onelook.data.water`).
+
+**Règle retenue :** un pixel est de l'eau permanente si l'eau y a été vue **au moins 50 % du temps** entre 1984 et 2020, ou s'il est hors de la couverture terrestre de JRC, c'est-à-dire en pleine mer.
+
+**Choix du seuil :** comparé à la couche « eau permanente » fournie avec Sen1Floods11, sur 40 tuiles :
+
+| Définition | Recouvrement (IoU) |
+|---|---|
+| Occurrence ≥ 25 % | 0,71 |
+| **Occurrence ≥ 50 %** | **0,90** |
+| Occurrence ≥ 75 % | 0,76 |
+| Occurrence ≥ 90 % | 0,54 |
+| Eau les 12 mois de l'année | 0,73 |
+
+Deux mesures par tuile dans l'index :
+- `frac_permanent_jrc` : part de la tuile en eau permanente ;
+- `scl_water_outside_jrc` : part de la tuile où l'image montre de l'eau (carte SCL) hors de l'eau permanente. Sur une normale, une valeur élevée signale une inondation possible non annotée.
+
+La carte n'est pas une entrée du modèle : il doit décider à partir de l'image seule. Elle sert à vérifier les étiquettes et à mesurer à part les fausses alertes sur l'eau permanente. L'embarquer à bord, en version compressée, reste une piste à évaluer.
 
 ## Format des images
 

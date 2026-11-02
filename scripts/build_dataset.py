@@ -5,6 +5,7 @@
     uv run python scripts/build_dataset.py floods    # 446 tuiles Sen1Floods11
     uv run python scripts/build_dataset.py fires     # 534 tuiles CaBuAr → ~2 100 tuiles + images avant feu
     uv run python scripts/build_dataset.py normals   # catalogue sur plusieurs années + points au hasard
+    uv run python scripts/build_dataset.py water     # carte d'eau permanente JRC sur chaque tuile
     uv run python scripts/build_dataset.py index     # index.csv avec le découpage train / val / test
     uv run python scripts/build_dataset.py all       # tout, dans l'ordre
 
@@ -20,11 +21,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import h5py
+import rasterio
 import pandas as pd
 import yaml
 from tqdm import tqdm
 
-from onelook.data import build, sources
+from onelook.data import build, l2a, sources, water
 from onelook.data.labels import LabelRules
 from onelook.data.splits import assign_zones, haversine_km, spatial_zones
 
@@ -119,13 +121,36 @@ def cabuar_zone_splits(df: pd.DataFrame, config: dict) -> dict[str, str]:
     return {f"cabuar_zone{z}": split for z, split in assign_zones(zones, burned, config["ratios"]).items()}
 
 
+def read_log(name: str) -> pd.DataFrame:
+    path = DATASET / f"{name}.jsonl"
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()] if path.exists() else []
+    return pd.DataFrame(rows)
+
+
+def stage_water(limit: int | None, workers: int) -> None:
+    """Carte d'eau permanente (JRC) de chaque tuile réussie : *_water.tif et parts dans water.jsonl."""
+    log = DATASET / "water.jsonl"
+    done = build.done_ids(log)
+    tiles = pd.concat([read_log(n) for n in ("floods", "fires", "normals")], ignore_index=True)
+    if "error" in tiles:
+        tiles = tiles[tiles["error"].isna()]
+    jobs = [{"id": r.id, "image": r.image} for r in tiles.drop_duplicates("id", keep="last").itertuples()
+            if r.id not in done][:limit]
+
+    def worker(job: dict) -> dict:
+        image = DATASET / job["image"]
+        grid = l2a.Grid.from_file(image)
+        occurrence = water.read_occurrence(grid)
+        build.write_mask(image.with_name(image.stem + "_water.tif"), occurrence, grid)
+        with rasterio.open(image.with_name(image.stem + "_SCL.tif")) as src:
+            scl = src.read(1)
+        return {"id": job["id"], **water.water_stats(occurrence, scl)}
+
+    run_jobs(jobs, worker, log, workers, "Eau permanente")
+
+
 def stage_index() -> None:
-    rows = []
-    for name in ("floods", "fires", "normals"):
-        path = DATASET / f"{name}.jsonl"
-        if path.exists():
-            rows += [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-    df = pd.DataFrame(rows)
+    df = pd.concat([read_log(n) for n in ("floods", "fires", "normals")], ignore_index=True)
     if "error" not in df:
         df["error"] = None
     errors = df[df["error"].notna()]
@@ -136,6 +161,11 @@ def stage_index() -> None:
     group_split = {g: split for split, groups in splits["groups"].items() for g in groups}
     group_split.update(cabuar_zone_splits(df, splits["cabuar_zones"]))
     df["split"] = df["group"].map(group_split).fillna(splits["default"])
+    water_log = read_log("water")
+    if "error" in water_log:
+        water_log = water_log[water_log["error"].isna()].drop(columns="error")
+    if len(water_log):
+        df = df.merge(water_log.drop_duplicates("id", keep="last"), on="id", how="left")
     df["scenes"] = df["scenes"].map(lambda s: ";".join(s) if isinstance(s, list) else s)
     df.sort_values(["split", "source", "id"]).to_csv(DATASET / "index.csv", index=False)
 
@@ -151,7 +181,7 @@ def stage_index() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("stage", choices=["floods", "fires", "normals", "index", "all"])
+    parser.add_argument("stage", choices=["floods", "fires", "normals", "water", "index", "all"])
     parser.add_argument("--limit", type=int, help="Nombre maximal de tâches (essai)")
     parser.add_argument("--workers", type=int, default=6)
     args = parser.parse_args()
@@ -162,6 +192,8 @@ def main() -> None:
         stage_fires(args.limit, args.workers)
     if args.stage in ("normals", "all"):
         stage_normals(args.limit, args.workers)
+    if args.stage in ("water", "all"):
+        stage_water(args.limit, args.workers)
     if args.stage in ("index", "all"):
         stage_index()
 

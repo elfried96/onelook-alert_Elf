@@ -17,6 +17,7 @@ from onelook.data.splits import haversine_km
 ROOT = Path(__file__).resolve().parents[1]
 DATASET = ROOT / "data" / "dataset"
 LEAK_DISTANCE_KM = 10  # deux tuiles de parties différentes à moins de 10 km : risque de fuite
+WATER_TRAPS = ["ocean", "littoral", "estuaire", "lac", "reservoir", "riviere", "lagune_ville", "rizieres"]
 
 
 def spatial_leaks(df: pd.DataFrame) -> pd.DataFrame:
@@ -50,6 +51,11 @@ def main() -> None:
     normals = df[df["label"] == "normal"]
     by_category = pd.crosstab(normals["category"], normals["split"], margins=True, margins_name="total")
     leaks = spatial_leaks(df)
+    traps = normals[normals["category"].isin(WATER_TRAPS)]
+    by_trap = pd.crosstab(traps["category"], traps["split"], margins=True, margins_name="total")
+    # Normale avec beaucoup d'eau hors de l'eau permanente : inondation possible non annotée, à vérifier
+    unexpected = (normals[normals["scl_water_outside_jrc"] >= rules.flood_alert]
+                  if "scl_water_outside_jrc" in normals else normals.iloc[:0])
 
     report = [
         "# Rapport du jeu de données", "",
@@ -58,6 +64,13 @@ def main() -> None:
         "## Décisions attendues par partie", "", md_table(by_label), "",
         "## Sources par partie", "", md_table(by_source), "",
         "## Catégories des tuiles normales", "", md_table(by_category), "",
+        "## Pièges d'eau permanente (normales)", "", md_table(by_trap), "",
+        "## Normales avec de l'eau inattendue", "",
+        f"Normales dont l'eau vue (SCL) hors de l'eau permanente JRC couvre au moins {rules.flood_alert:.0%} "
+        f"de la tuile : **{len(unexpected)}**, à vérifier à l'œil.", "",
+        *([md_table(unexpected[["id", "split", "category", "scl_water_outside_jrc"]]
+                    .sort_values("scl_water_outside_jrc", ascending=False).head(20).set_index("id")), ""]
+          if len(unexpected) else []),
         "## Contrôle de fuite spatiale", "",
         f"Paires de tuiles de parties différentes à moins de {LEAK_DISTANCE_KM} km : **{len(leaks)}**.",
     ]
