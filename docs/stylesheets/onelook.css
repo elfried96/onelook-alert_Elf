@@ -137,3 +137,47 @@
   color: var(--ol-ink-muted);
   max-width: 40em;
 }
+
+/* Figures : fond clair toujours (les images sont générées sur fond blanc), filet et légende discrète */
+.md-typeset figure {
+  margin: 1.6em auto;
+}
+.md-typeset figure img {
+  background: #ffffff;
+  border: 1px solid var(--ol-line);
+  border-radius: var(--ol-radius-m);
+  padding: 0.4em;
+}
+.md-typeset figcaption {
+  max-width: 46em;
+  color: var(--ol-ink-muted);
+  font-size: 0.8em;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+/* Chiffres clés */
+.md-typeset .ol-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5em, 1fr));
+  gap: 0.8em;
+  margin: 1.2em 0;
+}
+.md-typeset .ol-stats > div {
+  padding: 0.8em 1em;
+  background: var(--ol-surface-100);
+  border: 1px solid var(--ol-line);
+  border-radius: var(--ol-radius-m);
+  line-height: 1.35;
+}
+.md-typeset .ol-stats strong {
+  font-family: var(--ol-font-display);
+  font-size: 1.7em;
+  font-weight: 600;
+  color: var(--ol-brand);
+  font-variant-numeric: tabular-nums;
+}
+.md-typeset .ol-stats span {
+  color: var(--ol-ink-muted);
+  font-size: 0.8em;
+}

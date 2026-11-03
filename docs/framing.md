@@ -3,7 +3,7 @@
 Cette page fixe le périmètre du projet. Elle répond à la première question du sujet : qu'est-ce qui mérite une alerte ?
 
 !!! note "Statut"
-    Format des images validé avec le mentor le 21 octobre 2026. Périmètre élargi aux incendies le 23 octobre. Reste à confirmer : le niveau de traitement des images d'évaluation (L1C ou L2A).
+    Format des images validé avec le mentor le 21 octobre 2026. Périmètre élargi aux incendies le 23 octobre. Seuils d'alerte fixés le 27 octobre. Point d'étape le 29 octobre : le mentor ouvre la piste d'un petit VLM compressé. Reste à confirmer : le niveau de traitement des images d'évaluation (L1C ou L2A).
 
 ## Décisions
 
@@ -26,7 +26,7 @@ Le modèle regarde l'image une seule fois et répond par une seule décision :
 | <span class="ol-badge ol-badge--alert">Alerte · incendie</span> | La part de pixels brûlés récemment dépasse un seuil. |
 | <span class="ol-badge ol-badge--unknown">Inconnu</span> | L'image ne ressemble à rien de connu. Elle est envoyée au sol pour vérification. |
 
-Les seuils seront fixés et justifiés pendant la première semaine.
+**Seuils retenus :** alerte à partir de **5 % de la tuile** touchée (environ 1,3 km²), normale sous 0,5 %, zone ambiguë entre les deux, écartée de l'entraînement. Détail et justification dans [Étiquettes et découpage](data/labels_splits.md).
 
 ## Pourquoi ces anomalies
 
@@ -75,25 +75,33 @@ Passer de 13 à 6 bandes allège le modèle. L'effet de ce choix sera mesuré.
 | Roches volcaniques, asphalte | Incendie | Sombres dans le proche infrarouge |
 | Feux agricoles contrôlés | Incendie | Petits et habituels ; le seuil de surface les écarte |
 
-**Images très nuageuses :** le modèle ne lance pas d'alerte sur ce qu'il ne voit pas. Une image où le sol est en grande partie caché est classée <span class="ol-badge ol-badge--normal">Normal</span> ou <span class="ol-badge ol-badge--unknown">Inconnu</span> selon la part de nuages. Le seuil sera fixé pendant la première semaine.
+Des exemples de chacun de ces pièges, tirés du jeu de données, sont sur la page [Images normales et pièges](data/normals.md).
+
+**Images très nuageuses :** le modèle ne lance pas d'alerte sur ce qu'il ne voit pas. La part d'anomalie est comptée sur la tuile entière : une inondation cachée sous les nuages ne compte pas. Une image où le sol est presque entièrement caché est classée <span class="ol-badge ol-badge--normal">Normal</span> ou <span class="ol-badge ol-badge--unknown">Inconnu</span>.
 
 ## Le point clé : harmoniser L1C et L2A
 
 Sen1Floods11 est en niveau **L1C** (réflectance au sommet de l'atmosphère). CaBuAr est en niveau **L2A** (réflectance de surface). Les valeurs des pixels n'ont pas le même sens.
 
-Mélanger les deux sans précaution crée une **fuite** : le modèle apprendrait « L1C = inondation, L2A = incendie » au lieu de reconnaître l'eau et le brûlé. Toutes les images sont donc relues en **L2A depuis une source unique** (Microsoft Planetary Computer), aux mêmes lieux et aux mêmes dates. La méthode et les contrôles sont décrits dans le carnet de données. Si le mentor indique que l'évaluation sera en L1C, la même méthode s'appliquera avec une source L1C.
+Mélanger les deux sans précaution crée une **fuite** : le modèle apprendrait « L1C = inondation, L2A = incendie » au lieu de reconnaître l'eau et le brûlé. Toutes les images sont donc relues en **L2A depuis une source unique** (Microsoft Planetary Computer), aux mêmes lieux et aux mêmes dates. La méthode et les contrôles sont décrits dans [Harmonisation](data/harmonisation.md). Si le mentor indique que l'évaluation sera en L1C, la même méthode s'appliquera avec une source L1C.
 
 ## Question ouverte
 
 Les images d'évaluation seront-elles en niveau **L1C** ou **L2A** ? La réponse fixe le niveau de toutes les données d'entraînement.
 
+## Point d'étape avec le mentor (29 octobre)
+
+Le mentor laisse la liberté d'explorer pour réussir le projet, et propose une piste : un **petit modèle vision-langage (VLM), compressé**, capable de raisonner sur le contexte, en particulier sur l'emplacement des océans et des cours d'eau naturels. Cette piste est traitée comme une approche de plus, mesurée comme les autres (précision, rappel, fausses alertes, taille, temps) face au petit réseau de référence. Voir [Méthode](method.md).
+
 ## Planning
 
-| Période | Objectif |
-|---|---|
-| 23 → 29 oct | Harmoniser les données, constituer inondations, incendies et images normales, approches simples (NDWI, NBR et seuils) |
-| 30 oct → 7 nov | Réseau léger à quatre décisions, détection de l'inconnu, tableau comparatif |
-| 8 → 13 nov | Allègement (ONNX, quantification), cas d'échec, démo, carnet de données |
-| 14 → 16 nov | Marge, relecture, répétition de la démo |
+| Période | Objectif | État |
+|---|---|---|
+| 16 → 22 oct | Mise en place, cadrage, exploration des données | Fait |
+| 23 → 2 nov | Harmonisation, jeu complet (3 312 tuiles), découpage sans fuite, eau permanente | Fait |
+| 3 → 7 nov | Documentation illustrée, données sur Colab, approches simples (NDWI, NBR), réseau léger, détection de l'inconnu | En cours |
+| 7 → 11 nov | Piste VLM compressé, allègement (ONNX, quantification), tableau comparatif | À venir |
+| 11 → 14 nov | Cas d'échec, démo, rapport final | À venir |
+| 14 → 16 nov | Marge, relecture, répétition de la démo | À venir |
 
 **Filet de sécurité :** si la partie incendies prend du retard, le modèle inondation seul reste un projet complet, validé par le mentor.

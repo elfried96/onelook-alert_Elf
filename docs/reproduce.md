@@ -39,6 +39,14 @@ Chaque étape (`floods`, `fires`, `normals`, `water`, `index`) peut se lancer se
 - `index.csv` : une ligne par tuile, avec ses parts d'anomalie et sa partie (train, val, test) ;
 - `index_labels.csv` et `report.md` : décisions attendues selon `configs/labels.yaml`, et contrôle de fuite spatiale.
 
+### Figures de la documentation
+
+```bash
+uv run python scripts/make_figures.py
+```
+
+Le script régénère toutes les images de la documentation (`docs/assets/figures/`) à partir du jeu local. Il télécharge une fois les contours des terres de Natural Earth pour les cartes.
+
 ## Entraînement et évaluation
 
 Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en local. Les notebooks d'entraînement, dans `notebooks/`, clonent ce dépôt, installent l'environnement avec `uv sync` et récupèrent les données sur place.

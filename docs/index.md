@@ -11,6 +11,11 @@
 | <span class="ol-badge ol-badge--alert">Alerte · incendie</span> | Une part importante de l'image a brûlé récemment. |
 | <span class="ol-badge ol-badge--unknown">Inconnu</span> | L'image ne ressemble à rien de ce que le modèle connaît. Elle est envoyée au sol pour vérification. |
 
+<figure markdown="span">
+  ![Exemples de tuiles pour chaque décision](assets/figures/exemples_decisions.jpg)
+  <figcaption markdown="span">Des tuiles du jeu de données pour chaque décision attendue, avec la vérité terrain en surimpression. Détails dans le [Carnet de données](data_card.md).</figcaption>
+</figure>
+
 ## Pourquoi c'est utile
 
 Les satellites produisent plus d'images qu'on ne peut en envoyer au sol. Un modèle embarqué qui trie les images à bord permet de transmettre d'abord celles qui comptent. Il doit pour cela tenir dans peu de mémoire, répondre vite et ne pas alerter pour rien.

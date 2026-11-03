@@ -45,7 +45,13 @@ extra_css:
 nav:
   - Accueil: index.md
   - Cadrage: framing.md
-  - Données: data_card.md
+  - Données:
+      - Carnet de données: data_card.md
+      - Lire une image Sentinel-2: data/sentinel2.md
+      - Harmonisation: data/harmonisation.md
+      - Images normales et pièges: data/normals.md
+      - Eau permanente: data/water.md
+      - Étiquettes et découpage: data/labels_splits.md
   - Méthode: method.md
   - Résultats: results.md
   - Limites et échecs: failure_cases.md
