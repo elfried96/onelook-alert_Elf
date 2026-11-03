@@ -47,6 +47,15 @@ uv run python scripts/make_figures.py
 
 Le script régénère toutes les images de la documentation (`docs/assets/figures/`) à partir du jeu local. Il télécharge une fois les contours des terres de Natural Earth pour les cartes.
 
+### Paquet d'entraînement pour Colab
+
+```bash
+uv run python scripts/pack_dataset.py
+uv run python scripts/check_pack.py
+```
+
+Le paquet (`data/pack/`, environ 7,5 Go) contient une tuile par fichier : un GeoTIFF de 9 bandes (les 6 bandes retenues, la carte SCL, la vérité terrain unifiée et l'eau permanente), et son index. Il est envoyé une fois dans un dépôt de données **privé** sur Hugging Face, d'où Colab le télécharge en quelques minutes (`notebooks/02_colab_donnees.ipynb`).
+
 ## Entraînement et évaluation
 
 Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en local. Les notebooks d'entraînement, dans `notebooks/`, clonent ce dépôt, installent l'environnement avec `uv sync` et récupèrent les données sur place.
