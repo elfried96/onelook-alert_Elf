@@ -38,3 +38,20 @@ Les satellites produisent plus d'images qu'on ne peut en envoyer au sol. Un mod�
 | Anomalies | Inondations et incendies |
 | Outils | Python, PyTorch, TorchGeo, ONNX Runtime |
 | Code | [elfried96/onelook-alert_Elf](https://github.com/elfried96/onelook-alert_Elf) |
+
+## Parcourir la documentation
+
+| Page | Contenu |
+|---|---|
+| [Cadrage](framing.md) | Le périmètre, les décisions, les pièges, le planning |
+| [Carnet de données](data_card.md) | Vue d'ensemble : chiffres, carte, composition, sources, biais |
+| → [Lire une image Sentinel-2](data/sentinel2.md) | Bandes, couleurs, indices NDWI et NBR, signatures spectrales |
+| → [Harmonisation](data/harmonisation.md) | Toutes les images au même niveau L2A, position des tuiles CaBuAr |
+| → [Images normales et pièges](data/normals.md) | D'où viennent les normales, et ce qui ressemble à une anomalie |
+| → [Eau permanente](data/water.md) | Océans, lacs et cours d'eau contre inondation |
+| → [Étiquettes et découpage](data/labels_splits.md) | Décision attendue de chaque tuile, découpage sans fuite |
+| [Méthode](method.md) | Les approches testées, du seuil simple au petit VLM compressé |
+| [Résultats](results.md) | Le tableau comparatif |
+| [Limites et échecs](failure_cases.md) | L'analyse des erreurs |
+| [Reproduire](reproduce.md) | Installer, reconstruire les données, relancer les figures |
+
