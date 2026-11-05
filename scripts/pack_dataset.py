@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DATASET = ROOT / "data" / "dataset"
 PACK = ROOT / "data" / "pack"
 COLUMNS = ["id", "path", "split", "label", "source", "category", "group", "date", "lon", "lat",
-           "frac_valid", "frac_flood", "frac_burned", "frac_permanent_jrc", "scl_water_outside_jrc", "scl_cloud"]
+           "frac_valid", "frac_flood", "frac_burned", "frac_permanent_jrc", "scl_water_outside_jrc", "scl_cloud", "frac_fire_3y"]
 
 CARD = """---
 license: other

@@ -6,7 +6,7 @@ Le sujet impose de documenter la provenance, les licences, la composition, le d�
 |---|---|
 | [Lire une image Sentinel-2](data/sentinel2.md) | Les bandes, les couleurs, les indices NDWI et NBR, et pourquoi l'infrarouge voit l'eau et le brûlé |
 | [Harmonisation](data/harmonisation.md) | Pourquoi et comment toutes les images sont relues au même niveau L2A |
-| [Images normales et pièges](data/normals.md) | D'où viennent les 2 310 normales, et les paysages qui ressemblent à une anomalie |
+| [Images normales et pièges](data/normals.md) | D'où viennent les normales, et les paysages qui ressemblent à une anomalie |
 | [Eau permanente](data/water.md) | Océans, lacs et cours d'eau : distinguer l'eau habituelle de l'inondation |
 | [Étiquettes et découpage](data/labels_splits.md) | La décision attendue de chaque tuile, et la séparation entraînement / validation / test sans fuite |
 
@@ -35,10 +35,12 @@ Jeu complet constitué le 28 octobre et complété le 2 novembre (`scripts/build
 
 | Partie | Normal | Alerte · inondation | Alerte · incendie | Ambiguë (écartée) | Total |
 |---|---|---|---|---|---|
-| Entraînement | 1 360 | 88 | 286 | 277 | 2 011 |
-| Validation | 420 | 15 | 66 | 53 | 554 |
-| Test | 530 | 25 | 88 | 104 | 747 |
-| **Total** | **2 310** | **128** | **440** | **434** | **3 312** |
+| Entraînement | 1 175 | 88 | 286 | 462 | 2 011 |
+| Validation | 349 | 15 | 66 | 124 | 554 |
+| Test | 409 | 25 | 88 | 225 | 747 |
+| **Total** | **1 933** | **128** | **440** | **811** | **3 312** |
+
+Étiquettes v2 (6 novembre) : 377 normales californiennes recouvertes par un feu des 3 dernières années passent en ambiguës (voir [anciens feux](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)).
 
 Origine des tuiles :
 
@@ -67,6 +69,7 @@ Les images <span class="ol-badge ol-badge--unknown">Inconnu</span> (éruptions, 
 | CaBuAr | Zones brûlées, Californie, avant et après feu, 534 tuiles 512 × 512 | Sentinel-2 L2A (masques CAL FIRE) | CDLA-Permissive-2.0 | Alerte incendie |
 | Sentinel-2 L2A, Microsoft Planetary Computer (`sentinel-2-l2a`) | Toutes les images, relues au même niveau | Sentinel-2 | Données Copernicus : accès libre et gratuit | Harmonisation de toutes les tuiles |
 | JRC Global Surface Water 1984-2020 (Planetary Computer, `jrc-gsw`) | Occurrence de l'eau par pixel, 30 m | Landsat | Réutilisation libre avec citation (Commission européenne, JRC) — à confirmer | Eau permanente (étiquettes et évaluation, pas entrée du modèle) |
+| NIFC InterAgency Fire Perimeter History (ArcGIS, `InterAgencyFirePerimeterHistory_All_Years_View`) | Périmètres des feux de Californie 2012-2022, dont ceux de CAL FIRE | – | Domaine public (données du gouvernement fédéral américain) — à confirmer | Anciens feux : normales californiennes passées en ambiguës (étiquettes seulement) |
 | Natural Earth | Contours des terres | – | Domaine public | Fond des cartes de cette documentation |
 | CloudSEN12 | Nuages et ombres | Sentinel-2 | À vérifier | Images normales difficiles (piste) |
 | Copernicus Browser / Copernicus EMS | Éruptions, glissements de terrain, marées noires… | Sentinel-2 | À vérifier | Test de l'inconnu |
@@ -84,12 +87,13 @@ Les images <span class="ol-badge ol-badge--unknown">Inconnu</span> (éruptions, 
 
 ## Biais et limites
 
-- **Californie surreprésentée chez les normales.** 1 764 des 2 310 normales, soit 76 %, sont des quarts CaBuAr non brûlés ou des images avant feu. Un modèle pourrait associer « paysage californien » et « feu ». Parades prévues : pondérer les normales par source à l'entraînement, et mesurer les fausses alertes séparément sur les normales hors Californie.
+- **Californie surreprésentée chez les normales.** 1 387 des 1 933 normales, soit 72 %, sont des quarts CaBuAr non brûlés ou des images avant feu. Un modèle pourrait associer « paysage californien » et « feu ». Parades prévues : pondérer les normales par source à l'entraînement, et mesurer les fausses alertes séparément sur les normales hors Californie.
 - **Peu d'inondations.** 128 alertes seulement, dont 25 en test : les mesures de rappel sur les inondations auront une forte incertitude, à indiquer avec un intervalle.
 - **Inondations nuageuses.** Beaucoup de tuiles d'inondation sont prises en saison des pluies, avec des nuages : la part d'inondation est comptée sur la tuile entière, donc l'eau cachée ne déclenche pas d'alerte attendue.
+- **Anciens feux hors fenêtre** : une cicatrice de plus de 3 ans, ou un feu absent de l'historique (petits brûlis), peut encore rester dans une normale californienne.
 - **Feux d'une seule région et d'un seul type** (végétation méditerranéenne californienne) : la généralisation à d'autres biomes n'est pas garantie.
 - **Points au hasard non vérifiés un par un** : un point peut tomber sur une anomalie non annotée (crue locale, brûlis agricole). Le contrôle d'[eau inattendue](data/water.md#controle-des-normales) en couvre une partie.
-- **Tuiles ambiguës écartées** (434) : elles seront analysées à part, car c'est là que le modèle hésitera le plus.
+- **Tuiles ambiguës écartées** (811, dont 377 pour un ancien feu) : elles seront analysées à part, car c'est là que le modèle hésitera le plus.
 
 ## Reproduire
 

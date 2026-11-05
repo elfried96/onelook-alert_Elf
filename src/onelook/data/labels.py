@@ -17,6 +17,7 @@ class LabelRules:
     flood_alert: float = 0.05
     fire_alert: float = 0.05
     normal_max: float = 0.005
+    fire_history_years: int = 3
 
     @classmethod
     def from_yaml(cls, path: Path) -> LabelRules:
@@ -41,4 +42,8 @@ def add_labels(index: pd.DataFrame, rules: LabelRules) -> pd.DataFrame:
         label_row(f, v, b, rules)
         for f, v, b in zip(out["frac_flood"].fillna(0), out["frac_valid"].fillna(1), out["frac_burned"].fillna(0))
     ]
+    history = f"frac_fire_{rules.fire_history_years}y"
+    if history in out:
+        old_scar = (out["label"] == NORMAL) & (out[history].fillna(0) >= rules.normal_max)
+        out.loc[old_scar, "label"] = AMBIGUOUS
     return out

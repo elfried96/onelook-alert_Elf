@@ -26,3 +26,9 @@ def test_tiny_anomaly_is_ambiguous_and_nothing_is_normal():
 def test_add_labels_handles_missing_fractions():
     index = pd.DataFrame({"frac_flood": [0.5, None], "frac_valid": [1.0, None], "frac_burned": [0.0, None]})
     assert list(add_labels(index, RULES)["label"]) == [FLOOD, NORMAL]
+
+
+def test_old_fire_scar_turns_normal_into_ambiguous():
+    index = pd.DataFrame({"frac_flood": [0.0, 0.0, 0.0], "frac_valid": [1.0, 1.0, 1.0],
+                          "frac_burned": [0.0, 0.0, 0.3], "frac_fire_3y": [0.2, None, 0.4]})
+    assert list(add_labels(index, RULES)["label"]) == [AMBIGUOUS, NORMAL, FIRE]

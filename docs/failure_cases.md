@@ -36,7 +36,13 @@ Mesure à l'appui : la part de pixels au « brûlé apparent » (NBR < −0,05 e
 - le taux de fausses alertes incendie mesuré (3,2 % des normales) est **surestimé** ;
 - à l'entraînement, ces tuiles apprennent au modèle à ignorer de vraies cicatrices, ce qui peut lui coûter des détections.
 
-**Correction prévue :** croiser les tuiles CaBuAr avec l'historique public des périmètres de feux de Californie (CAL FIRE FRAP) des deux années précédentes. Une normale qui recoupe un feu récent passera en ambiguë, donc écartée de l'entraînement et de l'évaluation.
+**Correction appliquée (6 novembre) :** les périmètres de l'historique fédéral NIFC (qui regroupe ceux de CAL FIRE) des 3 années précédant l'image, plus celle de l'image, sont croisés avec chaque tuile de Californie. Une normale recouverte à plus de 0,5 % passe en ambiguë (détail dans [Étiquettes et découpage](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)).
+
+- **9 des 17 fausses alertes** sont recouvertes par un feu récent. Les deux images avant feu de fin août 2019 le sont par le feu Long Valley de juillet 2019 : la « cicatrice plus ancienne » vue sur la planche était fraîche de quelques semaines.
+- Les normales recouvertes déclenchent près de trois fois plus de fausses alertes que les autres (7,4 % contre 2,7 %).
+- **Même modèle, étiquettes v2 :** la précision incendie passe de 81 à 90 %, et les fausses alertes de 3,8 à 2,7 %. Rien n'a changé dans le modèle, seulement dans ce qu'on lui reprochait.
+
+Les 8 fausses alertes restantes (sols sombres, lits de rivière, brûlis absents de l'historique) sont de vraies erreurs du modèle. Le réentraînement sur les étiquettes v2 dira si un apprentissage plus propre les réduit.
 
 ## Fausses alertes inondation : l'eau saisonnière
 
@@ -85,7 +91,7 @@ C'est exactement la question du contexte (où est l'eau habituellement ?) que la
 
 ## Pistes d'amélioration, par ordre d'effet attendu
 
-1. **Nettoyer les étiquettes incendie** avec l'historique des périmètres de feux (anciennes cicatrices → ambiguës).
+1. ~~Nettoyer les étiquettes incendie~~ avec l'historique des périmètres de feux : fait le 6 novembre (étiquettes v2), réentraînement en cours.
 2. **Clarifier l'eau saisonnière** : décider, avec le mentor, si une rizière ou un réservoir saisonnier en eau mérite une alerte, et rendre les étiquettes cohérentes avec ce choix.
 3. **Entraîner à 512 px** pour les petites zones brûlées et les filets d'eau, et mesurer le coût en temps.
 4. **Régler le seuil « inconnu »** selon la priorité : moins de fausses alertes, ou plus de détections.
@@ -95,4 +101,4 @@ C'est exactement la question du contexte (où est l'eau habituellement ?) que la
 - 25 inondations en test : une tuile représente 4 points de rappel.
 - Tous les incendies sont californiens, y compris en test.
 - Le seuil « inconnu » est calibré sur 501 tuiles de validation, dont 15 inondations.
-- Les étiquettes incendie contiennent du bruit (anciennes cicatrices) : les mesures d'incendie sont à lire avec cette réserve.
+- Les étiquettes incendie v2 écartent les cicatrices de moins de 3 ans connues de l'historique ; un brûlis plus ancien ou non répertorié peut encore rester dans une normale.

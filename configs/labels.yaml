@@ -10,3 +10,8 @@
 flood_alert: 0.05   # au moins 5 % de la tuile (environ 1,3 km²) sous l'eau d'inondation visible
 fire_alert: 0.05    # au moins 5 % de la tuile brûlée récemment
 normal_max: 0.005   # moins de 0,5 % : la tuile est normale
+
+# Anciens feux (Californie) : CaBuAr n'annote que le feu de l'événement. Une normale dont plus de normal_max
+# de la surface a brûlé dans les fire_history_years dernières années (année de l'image comprise, périmètres
+# NIFC) montre souvent une cicatrice encore visible : elle passe en ambiguë.
+fire_history_years: 3

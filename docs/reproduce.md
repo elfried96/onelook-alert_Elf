@@ -32,9 +32,10 @@ uv run python scripts/build_dataset.py all
 uv run python scripts/dataset_report.py
 ```
 
-Chaque étape (`floods`, `fires`, `normals`, `water`, `index`) peut se lancer seule et reprend là où elle s'est arrêtée. Durée : environ une heure, surtout des lectures réseau. Résultat dans `data/dataset/` :
+Chaque étape (`floods`, `fires`, `normals`, `water`, `fire_history`, `index`) peut se lancer seule et reprend là où elle s'est arrêtée. Durée : environ une heure, surtout des lectures réseau. Résultat dans `data/dataset/` :
 
 - `floods/`, `fires/`, `normals/` : une tuile GeoTIFF 12 bandes par image, sa carte SCL et, si elle existe, sa vérité terrain (`*_mask.tif`) ;
+- `fire_history.jsonl` : la part de chaque tuile de Californie couverte par un feu récent (périmètres NIFC, téléchargés une fois dans `data/raw/fire_history/`) ;
 - `*_water.tif` : la carte d'eau permanente JRC de chaque tuile (occurrence de l'eau 1984-2020, 255 en pleine mer) ;
 - `index.csv` : une ligne par tuile, avec ses parts d'anomalie et sa partie (train, val, test) ;
 - `index_labels.csv` et `report.md` : décisions attendues selon `configs/labels.yaml`, et contrôle de fuite spatiale.

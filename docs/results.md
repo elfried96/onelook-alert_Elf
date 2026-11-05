@@ -3,7 +3,10 @@
 Tableau comparatif des approches testées, demandé par le sujet. Toutes les mesures sont faites sur le même **jeu de test** : 747 tuiles de zones jamais vues à l'entraînement, dont 643 hors tuiles ambiguës (530 normales, 25 inondations, 88 incendies). Les définitions sont dans `onelook.evaluation.metrics`.
 
 !!! note "Premiers résultats (5 novembre)"
-    Baselines et premier réseau entraînés sur Colab (`notebooks/03_colab_entrainement.ipynb`). Quantification et piste VLM à venir.
+    Baselines et premier réseau entraînés sur Colab (`notebooks/03_colab_entrainement.ipynb`), avec les étiquettes v1. Quantification et piste VLM à venir.
+
+!!! warning "Étiquettes v2 (6 novembre)"
+    Les normales californiennes recouvertes par un feu récent passent en ambiguës (voir [anciens feux](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)). Le test v2 compte 522 tuiles hors ambiguës (409 normales, 25 inondations, 88 incendies). Le tableau ci-dessous reste en v1 jusqu'au réentraînement ; le premier réseau, simplement réévalué en v2, donne une précision incendie de **90 %** (au lieu de 81 %) et **2,7 %** de fausses alertes (au lieu de 3,8 %), rappels inchangés.
 
 | Approche | Précision (inond. · incendie) | Rappel (inond. · incendie) | Fausses alertes | Fausses alertes sur l'eau | Taille (Mo) | Temps (ms) |
 |---|---|---|---|---|---|---|

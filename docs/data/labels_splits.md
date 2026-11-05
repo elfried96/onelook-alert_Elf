@@ -17,6 +17,28 @@ Trois choix à noter :
 - **La part est comptée sur la tuile entière, pas sur sa partie visible.** Une inondation cachée sous les nuages ne compte pas : le modèle ne doit pas alerter sur ce qu'il ne voit pas.
 - **La zone ambiguë évite d'apprendre des frontières arbitraires.** Une tuile à 2 % d'eau n'est ni clairement normale, ni clairement en alerte.
 
+### Anciens feux : des normales qui n'en sont pas
+
+CaBuAr n'annote que l'incendie de l'événement. Les cicatrices des feux des années précédentes, encore visibles sur l'image, restaient donc « normales ». L'[analyse des échecs](../failure_cases.md) l'a montré : le réseau prenait certaines de ces tuiles pour des incendies, à raison.
+
+Correction (6 novembre, module `onelook.data.fire_history`, étape `fire_history` de `scripts/build_dataset.py`) :
+
+1. Télécharger les périmètres des feux de Californie de 2012 à 2022 dans l'historique fédéral NIFC (*InterAgency Fire Perimeter History*, 5 763 périmètres, qui regroupe ceux de CAL FIRE et des agences fédérales).
+2. Mesurer, sur chaque tuile de Californie, la part couverte par un feu de l'année de l'image ou des 3 années précédentes (`fire_history_years: 3` dans `configs/labels.yaml`).
+3. Une normale couverte à plus de 0,5 % passe en **ambiguë**, comme une tuile avec un peu d'anomalie.
+
+Les feux de l'année de l'image comptent : l'historique ne donne que l'année, pas la date de fin, et un feu de l'été précédant une image d'automne est bien visible. Effet : **377 normales californiennes** (21 %) passent en ambiguës, dont 121 en test. Aucune autre étiquette ne change.
+
+| Fenêtre (années avant l'image) | Normales écartées | Fausses alertes incendie du premier réseau expliquées |
+|---|---|---|
+| Année de l'image seule | 39 | 3 sur 17 |
+| 1 an | 136 | 6 sur 17 |
+| 2 ans | 261 | 7 sur 17 |
+| **3 ans (retenu)** | **377** | **9 sur 17** |
+| 5 ans | 539 | 9 sur 17 |
+
+Au-delà de 3 ans, on écarte beaucoup plus de normales sans expliquer davantage d'erreurs : la végétation a repoussé.
+
 La décision <span class="ol-badge ol-badge--unknown">Inconnu</span> n'est pas une classe apprise : elle viendra du score de confiance du modèle, calibré sur la validation, et sera testée sur un lot de phénomènes jamais vus.
 
 <figure markdown="span">

@@ -6,6 +6,7 @@
     uv run python scripts/build_dataset.py fires     # 534 tuiles CaBuAr → ~2 100 tuiles + images avant feu
     uv run python scripts/build_dataset.py normals   # catalogue sur plusieurs années + points au hasard
     uv run python scripts/build_dataset.py water     # carte d'eau permanente JRC sur chaque tuile
+    uv run python scripts/build_dataset.py fire_history  # anciens feux (NIFC) sur les tuiles de Californie
     uv run python scripts/build_dataset.py index     # index.csv avec le découpage train / val / test
     uv run python scripts/build_dataset.py all       # tout, dans l'ordre
 
@@ -26,7 +27,7 @@ import pandas as pd
 import yaml
 from tqdm import tqdm
 
-from onelook.data import build, l2a, sources, water
+from onelook.data import build, fire_history, l2a, sources, water
 from onelook.data.labels import LabelRules
 from onelook.data.splits import assign_zones, haversine_km, spatial_zones
 
@@ -149,6 +150,29 @@ def stage_water(limit: int | None, workers: int) -> None:
     run_jobs(jobs, worker, log, workers, "Eau permanente")
 
 
+def stage_fire_history(limit: int | None, workers: int) -> None:
+    """Part de chaque tuile de Californie couverte par des feux des années précédentes (fire_history.jsonl)."""
+    perimeters = ROOT / "data" / "raw" / "fire_history" / "nifc_californie_2012_2022.geojson"
+    if not perimeters.exists():
+        fire_history.download(perimeters, 2012, 2022)
+    fires = fire_history.load(perimeters)
+    log = DATASET / "fire_history.jsonl"
+    done = build.done_ids(log)
+    west, south, east, north = fire_history.CALIFORNIA
+    tiles = pd.concat([read_log(n) for n in ("floods", "fires", "normals")], ignore_index=True)
+    if "error" in tiles:
+        tiles = tiles[tiles["error"].isna()]
+    tiles = tiles[tiles["lon"].between(west, east) & tiles["lat"].between(south, north)]
+    jobs = [{"id": r.id, "image": r.image, "year": int(str(r.date)[:4])}
+            for r in tiles.drop_duplicates("id", keep="last").itertuples() if r.id not in done][:limit]
+
+    def worker(job: dict) -> dict:
+        grid = l2a.Grid.from_file(DATASET / job["image"])
+        return {"id": job["id"], **fire_history.history_stats(grid, fires, job["year"])}
+
+    run_jobs(jobs, worker, log, workers, "Anciens feux")
+
+
 def stage_index() -> None:
     df = pd.concat([read_log(n) for n in ("floods", "fires", "normals")], ignore_index=True)
     if "error" not in df:
@@ -161,11 +185,12 @@ def stage_index() -> None:
     group_split = {g: split for split, groups in splits["groups"].items() for g in groups}
     group_split.update(cabuar_zone_splits(df, splits["cabuar_zones"]))
     df["split"] = df["group"].map(group_split).fillna(splits["default"])
-    water_log = read_log("water")
-    if "error" in water_log:
-        water_log = water_log[water_log["error"].isna()].drop(columns="error")
-    if len(water_log):
-        df = df.merge(water_log.drop_duplicates("id", keep="last"), on="id", how="left")
+    for name in ("water", "fire_history"):
+        extra = read_log(name)
+        if "error" in extra:
+            extra = extra[extra["error"].isna()].drop(columns="error")
+        if len(extra):
+            df = df.merge(extra.drop_duplicates("id", keep="last"), on="id", how="left")
     df["scenes"] = df["scenes"].map(lambda s: ";".join(s) if isinstance(s, list) else s)
     df.sort_values(["split", "source", "id"]).to_csv(DATASET / "index.csv", index=False)
 
@@ -181,7 +206,7 @@ def stage_index() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("stage", choices=["floods", "fires", "normals", "water", "index", "all"])
+    parser.add_argument("stage", choices=["floods", "fires", "normals", "water", "fire_history", "index", "all"])
     parser.add_argument("--limit", type=int, help="Nombre maximal de tâches (essai)")
     parser.add_argument("--workers", type=int, default=6)
     args = parser.parse_args()
@@ -194,6 +219,8 @@ def main() -> None:
         stage_normals(args.limit, args.workers)
     if args.stage in ("water", "all"):
         stage_water(args.limit, args.workers)
+    if args.stage in ("fire_history", "all"):
+        stage_fire_history(args.limit, args.workers)
     if args.stage in ("index", "all"):
         stage_index()
 
