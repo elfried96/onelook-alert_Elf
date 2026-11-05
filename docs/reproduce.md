@@ -69,7 +69,7 @@ Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en 
 | Récupérer les résultats | Local | `uv run hf download Elfried9684/onelook-alert-runs --include "runs/*" --local-dir .` |
 | Réévaluer un modèle exporté (mesures, taille, temps sur un cœur) | Local ou Colab | `uv run python scripts/evaluate.py runs/<nom> --split test` |
 
-Les scripts appelés par les notebooks sont dans `scripts/` : `baselines.py`, `train.py` (`--smoke` pour un essai de deux pas sur 24 tuiles) et `evaluate.py`. Les résultats (`runs/`) vont dans un dépôt privé Hugging Face, jamais dans Git.
+Les scripts appelés par les notebooks sont dans `scripts/` : `baselines.py`, `train.py` (`--smoke` pour un essai de deux pas sur 24 tuiles) et `evaluate.py` ; les planches d'erreurs de la page Limites et échecs viennent de `uv run python scripts/failure_figures.py runs/<nom>`. Les résultats (`runs/`) vont dans un dépôt privé Hugging Face, jamais dans Git.
 
 Le matériel utilisé pour chaque entraînement est indiqué dans la page Résultats.
 
