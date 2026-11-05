@@ -1,6 +1,6 @@
 # Limites et échecs
 
-Le sujet demande une analyse des cas d'échec. Cette page décrit les erreurs du premier réseau (MobileNetV3-Small, 256 px, avec « inconnu ») sur le **jeu de test**, image par image : ce que le modèle a répondu, la bonne réponse, et l'explication la plus probable.
+Le sujet demande une analyse des cas d'échec. Cette page décrit d'abord les erreurs du premier réseau (MobileNetV3-Small, 256 px, étiquettes v1, avec « inconnu ») sur le **jeu de test**, puis ce qui reste après la correction des étiquettes et l'entraînement à 512 px ([plus bas](#apres-correction-512-px-etiquettes-v2)), image par image : ce que le modèle a répondu, la bonne réponse, et l'explication la plus probable.
 
 Les planches sont produites par `scripts/failure_figures.py` à partir des décisions enregistrées (`runs/mobilenet_v3_small_256/decisions_test_model.csv`). Chaque tuile est montrée deux fois : en couleurs naturelles, puis en **infrarouge court** (B12, B08, B04), où le sol brûlé ressort en rouge-brun, l'eau en noir ou bleu sombre et la végétation en vert. Le contour bleu marque l'eau d'inondation annotée, le contour jaune la zone brûlée annotée. Le titre donne la vérité, la décision et la confiance du modèle.
 
@@ -83,6 +83,21 @@ C'est exactement la question du contexte (où est l'eau habituellement ?) que la
 - Les zones touchent souvent le **bord de la tuile** : le modèle n'en voit qu'un morceau, sans le contexte du feu.
 - Les masques viennent des **périmètres** CAL FIRE : ils englobent des îlots de végétation intacte ou peu touchée (3e tuile). Une partie du « brûlé annoté » n'est pas visible comme tel.
 - Une image réduite à 256 × 256 perd les détails fins : l'essai à 512 px dira si la pleine résolution aide.
+
+## Après correction : 512 px, étiquettes v2
+
+Réseau réentraîné à pleine résolution sur les étiquettes v2, même jeu de test.
+
+| Erreur | Premier réseau (v2) | 512 px, v2 | Ce qui reste |
+|---|---|---|---|
+| Normale → alerte incendie | 8 | 12 | 10 quarts CaBuAr voisins du feu de l'événement, 2 images avant feu (le lit de rivière sombre déjà vu) |
+| Normale → alerte inondation | 3 | 2 | Rizières au Bangladesh, mares en Bolivie (sous le seuil d'alerte) |
+| Inondation manquée | 9 | 7 | Toutes entre 5 et 10 % de la tuile, juste au-dessus du seuil d'alerte |
+| Incendie manqué | 17 | 5 | 2 petites zones (5 à 7 %), 2 tuiles à 21 % prises pour normales, 1 tuile brûlée à 97 % classée « inconnu » |
+
+- **La pleine résolution règle surtout les incendies** : 12 incendies manqués de moins, dont la plupart des petites zones en bord de tuile.
+- **Les inondations manquées restent à la frontière** : la plus grande ne couvre que 10 % de la tuile. Sur les 9 manquées par le premier réseau, le nouveau en retrouve 3, mais en manque 1 autre.
+- **Les fausses alertes incendie ont changé de nature.** Les anciennes cicatrices sont écartées ; 10 des 12 restantes sont des quarts CaBuAr voisins du feu annoté, sans périmètre connu dans l'historique. Hypothèses à vérifier : fumée ou cendres en bordure du feu, ou brûlé hors du masque CaBuAr. Les fausses alertes incendie hors Californie restent nulles.
 
 ## Inconnus et tuiles ambiguës
 
