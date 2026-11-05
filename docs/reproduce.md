@@ -62,9 +62,16 @@ Le paquet (`data/pack/`, environ 7,5 Go) contient une tuile par fichier : un Geo
 
 Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en local. Les notebooks d'entraînement, dans `notebooks/`, clonent ce dépôt, installent l'environnement avec `uv sync` et récupèrent les données sur place.
 
-Le matériel utilisé pour chaque entraînement est indiqué dans la page Résultats.
+| Étape | Où | Commande ou notebook |
+|---|---|---|
+| Préparer la session, télécharger et vérifier les données | Colab | `notebooks/02_colab_donnees.ipynb` |
+| Baselines, entraînement, évaluation, rangement des résultats | Colab (GPU T4) | `notebooks/03_colab_entrainement.ipynb` |
+| Récupérer les résultats | Local | `uv run hf download Elfried9684/onelook-alert-runs --local-dir .` |
+| Réévaluer un modèle exporté (mesures, taille, temps sur un cœur) | Local ou Colab | `uv run python scripts/evaluate.py runs/<nom> --split test` |
 
-À venir.
+Les scripts appelés par les notebooks sont dans `scripts/` : `baselines.py`, `train.py` (`--smoke` pour un essai de deux pas sur 24 tuiles) et `evaluate.py`. Les résultats (`runs/`) vont dans un dépôt privé Hugging Face, jamais dans Git.
+
+Le matériel utilisé pour chaque entraînement est indiqué dans la page Résultats.
 
 ## Tests
 
