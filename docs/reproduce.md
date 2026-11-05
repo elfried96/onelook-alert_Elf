@@ -54,6 +54,8 @@ uv run python scripts/pack_dataset.py
 uv run python scripts/check_pack.py
 ```
 
+Envoi (une fois, après `uv run hf auth login`) : `uv run python scripts/upload_pack.py`, par lots, avec reprise après coupure.
+
 Le paquet (`data/pack/`, environ 7,5 Go) contient une tuile par fichier : un GeoTIFF de 9 bandes (les 6 bandes retenues, la carte SCL, la vérité terrain unifiée et l'eau permanente), et son index. Il est envoyé une fois dans un dépôt de données **privé** sur Hugging Face, d'où Colab le télécharge en quelques minutes (`notebooks/02_colab_donnees.ipynb`).
 
 ## Entraînement et évaluation
