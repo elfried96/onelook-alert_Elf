@@ -31,7 +31,12 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=8.0", "ipykernel>=6.29", "nbconvert>=7.16"]
+dev = [
+    "pytest>=8.0",
+    "ipykernel>=6.29",
+    "nbconvert>=7.16",
+    "onnx>=1.16",
+]
 docs = ["mkdocs>=1.6,<2", "mkdocs-material>=9.5,<10"]
 train = ["torch>=2.3", "torchvision>=0.18", "torchgeo>=0.6", "onnx>=1.16"]
 demo = ["gradio>=4.0"]

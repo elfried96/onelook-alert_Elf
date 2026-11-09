@@ -3,7 +3,7 @@
 Tableau comparatif des approches testées, demandé par le sujet. Toutes les mesures sont faites sur le même **jeu de test** : 747 tuiles de zones jamais vues à l'entraînement, dont 546 hors tuiles ambiguës (433 normales, 25 inondations, 88 incendies). Les définitions sont dans `onelook.evaluation.metrics`.
 
 !!! note "Étiquettes v3 (9 novembre)"
-    Toutes les lignes sont mesurées avec les étiquettes v3 : les normales californiennes recouvertes par un feu de l'année de l'image ou de l'année précédente sont écartées (voir [anciens feux](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)). Les lignes « entraîné en v1 / v2 » sont d'anciens réseaux, entraînés sur des étiquettes moins propres et gardés pour comparaison. Entraînements sur Colab (`notebooks/03_colab_entrainement.ipynb`), temps mesurés en local. Quantification et piste VLM à venir.
+    Toutes les lignes sont mesurées avec les étiquettes v3 : les normales californiennes recouvertes par un feu de l'année de l'image ou de l'année précédente sont écartées (voir [anciens feux](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)). Les lignes « entraîné en v1 / v2 » sont d'anciens réseaux, entraînés sur des étiquettes moins propres et gardés pour comparaison. Entraînements sur Colab (`notebooks/03_colab_entrainement.ipynb`), temps mesurés en local. Piste VLM à venir.
 
 | Approche | Précision (inond. · incendie) | Rappel (inond. · incendie) | Fausses alertes | Fausses alertes sur l'eau | Taille (Mo) | Temps (ms) |
 |---|---|---|---|---|---|---|
@@ -15,10 +15,11 @@ Tableau comparatif des approches testées, demandé par le sujet. Toutes les mes
 | MobileNetV3-Small, 256 px, entraîné en v3 | 81 % · 96 % | 68 % · 98 % | 1,8 % | 8,3 % | 6,10 | 6,8 ² |
 | **MobileNetV3-Small, 512 px, entraîné en v3** | **86 % · 97 %** | **72 % · 95 %** | **1,4 %** | **4,2 %** | **6,10** | **14,7 ²** |
 | Même réseau, seuil « inconnu » strict (0,83) ³ | 94 % · 99 % | 60 % · 94 % | 0,5 % | 0 % | 6,10 | 14,7 ² |
-| MobileNetV3-Small, ONNX quantifié | – | – | – | – | – | – |
+| Même réseau, poids int8 seuls ⁵ | 85 % · 98 % | 68 % · 94 % | 1,2 % | 4,2 % | 1,64 | × 2,3 ⁵ |
+| Même réseau, int8 complet ⁵ | – · – | 0 % · 0 % | 0 % | 0 % | 1,88 | × 1,4 ⁵ |
 | Petit VLM compressé | – | – | – | – | – | – |
 
-Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation, voir [plus bas](#le-seuil-inconnu)). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H ; les cinq derniers réseaux ont été chronométrés ensemble, en alternance, pour être comparables. ³ Seuil calibré en gardant 95 % des bonnes réponses de validation ; les autres réseaux gardent 98 %.
+Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation, voir [plus bas](#le-seuil-inconnu)). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H ; les cinq derniers réseaux ont été chronométrés ensemble, en alternance, pour être comparables. ³ Seuil calibré en gardant 95 % des bonnes réponses de validation ; les autres réseaux gardent 98 %. ⁵ Quantification après entraînement, voir [plus bas](#quantification) ; temps donné par rapport au flottant mesuré dans la même séance.
 
 **Lecture rapide :**
 
@@ -70,6 +71,32 @@ Chaque ligne est une vérité, chaque colonne une décision du modèle. La diago
 | Alerte · incendie (88) | 4 | 0 | 84 | 0 |
 
 Avec le seuil strict (0,83) : 415 / 1 / 1 / 16 sur les normales, 4 / 15 / 0 / 6 sur les inondations, 2 / 0 / 83 / 3 sur les incendies. Sans « inconnu » (on garde toujours la classe la plus probable) : 76 % de rappel inondation, 95 % de rappel incendie, 2,3 % de fausses alertes.
+
+### Quantification
+
+But : un modèle plus petit et plus rapide pour un calculateur embarqué, sans réentraîner (`scripts/quantize.py`, quantification après entraînement d'ONNX Runtime). Trois variantes du réseau de référence (512 px, v3, seuil 0,67), toutes avec des poids int8 par canal :
+
+| Variante | Rappel (inond. · incendie) | Fausses alertes | Taille (Mo) | Temps par rapport au flottant |
+|---|---|---|---|---|
+| Flottant 32 bits (référence) | 72 % · 95 % | 1,4 % | 6,10 | × 1 |
+| Int8 complet (poids et activations) | 0 % · 0 % | 0 % | 1,88 | × 1,4 (plus lent) |
+| Poids int8, activations 16 bits | 72 % · 94 % | 1,2 % | 1,88 | × 3,2 |
+| Poids int8 seuls, calcul en flottant | 68 % · 94 % | 1,2 % | 1,64 | × 2,3 |
+
+Temps mesurés ensemble, en alternance, sur un cœur de l'i7-10850H : la machine étant plus ou moins chargée selon les séances, seul le rapport au flottant de la même séance est comparable (deux séances : × 1,4 / 3,2 à 3,3 / 2,3 à 2,5).
+
+**L'int8 complet ne marche pas sur ce réseau** : il répond « normal » sur toutes les tuiles. Le diagnostic, couche par couche :
+
+- La perte vient des **activations**, pas des poids : quantifiés seuls, les poids ne s'écartent en moyenne que de 2 % au plus de leur valeur, couche par couche, et le réseau garde ses décisions.
+- La première convolution sort des valeurs de -160 à 120 pour un écart-type de 2,4, à cause de pixels très brillants (jusqu'à 13 écarts-types après normalisation). Sur 8 bits, un pas vaut alors 0,45 écart-type : les détails utiles disparaissent. D'autres couches (blocs à excitation, *hard-swish*) ont le même profil.
+- Couper les extrêmes (calibrage par centile 99,9 ou 99,99), garder la première couche en flottant ou réduire la plage des poids n'y change presque rien : la moitié des décisions restent fausses sur un échantillon de validation.
+
+**L'int8 n'accélère pas non plus le calcul ici** : ce processeur n'a pas les instructions int8 rapides (VNNI), et MobileNetV3-Small est surtout fait de convolutions par canal, peu coûteuses en flottant. Les deux variantes qui gardent les décisions sont plus lentes, car elles reconvertissent poids ou activations à chaque passe.
+
+**Bilan :** la quantification après entraînement divise la taille du fichier par 3,7 (poids int8 seuls, 1,6 Mo) pour une décision quasi identique (1 inondation de moins sur 25), mais elle ne fait pas gagner de temps sur ce processeur. Le modèle de référence reste en flottant. Deux pistes, non faites :
+
+- **Entraînement avec quantification simulée** (*quantization-aware training*, sur Colab) : le réseau apprend à tolérer les activations 8 bits. C'est la méthode usuelle pour MobileNetV3.
+- **Mesurer sur le matériel visé** : un processeur ARM avec instructions int8, ou un accélérateur, peut tirer de l'int8 un vrai gain de temps qu'un i7 de 2020 ne montre pas.
 
 ### Courbes d'entraînement
 

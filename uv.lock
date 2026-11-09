@@ -1708,6 +1708,7 @@ demo = [
 dev = [
     { name = "ipykernel" },
     { name = "nbconvert" },
+    { name = "onnx" },
     { name = "pytest" },
 ]
 docs = [
@@ -1749,6 +1750,7 @@ demo = [{ name = "gradio", specifier = ">=4.0" }]
 dev = [
     { name = "ipykernel", specifier = ">=6.29" },
     { name = "nbconvert", specifier = ">=7.16" },
+    { name = "onnx", specifier = ">=1.16" },
     { name = "pytest", specifier = ">=8.0" },
 ]
 docs = [
