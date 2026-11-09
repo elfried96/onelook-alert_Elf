@@ -9,25 +9,50 @@ Tableau comparatif des approches testées, demandé par le sujet. Toutes les mes
 |---|---|---|---|---|---|---|
 | Seuils NDWI + NBR | 13 % · 89 % | 52 % · 81 % | 22 % | 88 % | 0,00 | 17 ¹ |
 | Classifieur sur statistiques | 50 % · 84 % | 60 % · 65 % | 6,0 % | 31 % | 2,59 | 34 ¹ |
-| MobileNetV3-Small, 256 px, entraîné en v1 | 84 % · 97 % | 64 % · 81 % | 1,2 % | 2,1 % | 6,10 | 7,6 ² |
-| MobileNetV3-Small, 256 px, entraîné en v2 | 90 % · 84 % | 76 % · 97 % | 4,2 % | 8,3 % | 6,10 | 6,9 ² |
-| MobileNetV3-Small, 512 px, entraîné en v2 | 90 % · 95 % | 72 % · 94 % | 1,4 % | 2,1 % | 6,10 | 15,4 ² |
-| MobileNetV3-Small, 256 px, entraîné en v3 | 92 % · 100 % | 44 % · 98 % | 0,2 % | 2,1 % | 6,10 | 6,8 ² |
-| **MobileNetV3-Small, 512 px, entraîné en v3** | **94 % · 99 %** | **60 % · 94 %** | **0,5 %** | **0 %** | **6,10** | **14,7 ²** |
+| MobileNetV3-Small, 256 px, entraîné en v1 ³ | 84 % · 97 % | 64 % · 81 % | 1,2 % | 2,1 % | 6,10 | 7,6 ² |
+| MobileNetV3-Small, 256 px, entraîné en v2 ³ | 90 % · 84 % | 76 % · 97 % | 4,2 % | 8,3 % | 6,10 | 6,9 ² |
+| MobileNetV3-Small, 512 px, entraîné en v2 ³ | 90 % · 95 % | 72 % · 94 % | 1,4 % | 2,1 % | 6,10 | 15,4 ² |
+| MobileNetV3-Small, 256 px, entraîné en v3 | 81 % · 96 % | 68 % · 98 % | 1,8 % | 8,3 % | 6,10 | 6,8 ² |
+| **MobileNetV3-Small, 512 px, entraîné en v3** | **86 % · 97 %** | **72 % · 95 %** | **1,4 %** | **4,2 %** | **6,10** | **14,7 ²** |
+| Même réseau, seuil « inconnu » strict (0,83) ³ | 94 % · 99 % | 60 % · 94 % | 0,5 % | 0 % | 6,10 | 14,7 ² |
 | MobileNetV3-Small, ONNX quantifié | – | – | – | – | – | – |
 | Petit VLM compressé | – | – | – | – | – | – |
 
-Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H ; les quatre derniers réseaux ont été chronométrés ensemble, en alternance, pour être comparables.
+Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation, voir [plus bas](#le-seuil-inconnu)). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H ; les cinq derniers réseaux ont été chronométrés ensemble, en alternance, pour être comparables. ³ Seuil calibré en gardant 95 % des bonnes réponses de validation ; les autres réseaux gardent 98 %.
 
 **Lecture rapide :**
 
 - Les seuils voient « de l'eau », pas « de l'eau inhabituelle » : 88 % des pièges d'eau (océan, fleuve, lac, rizières) déclenchent une alerte inondation.
 - Le classifieur sur statistiques réduit les fausses alertes (6 %), mais rate plus d'un incendie sur trois : une zone brûlée de 5 à 15 % de la tuile se noie dans des moyennes.
-- **Avec des étiquettes propres, les fausses alertes deviennent rares.** Le réseau à 512 px entraîné en v3 ne se trompe que sur 2 normales sur 433 (0,5 %) : une tuile de désert prise pour un incendie, des mares en Bolivie prises pour une inondation. Aucune des 48 tuiles pièges d'eau ne déclenche d'alerte. La précision incendie atteint 99 %.
-- **Le prix : des inondations plus souvent en « inconnu ».** Le rappel inondation tombe à 60 % (15 sur 25), contre 72 % pour le 512 px v2. L'écart tient en 3 tuiles, dans la marge d'incertitude ; 6 des 10 inondations manquées vont en « inconnu », dont 3 avec une confiance de 0,79 à 0,82, juste sous le seuil (0,83). Sans « inconnu », le rappel inondation remonte à 76 %.
-- **Le 512 px v3 devient le modèle de référence**, pour un système d'alerte où une fausse alerte coûte cher. Si la priorité était de rater le moins d'inondations possible, le 512 px v2 ou un seuil « inconnu » plus bas (piste à mesurer) ferait mieux.
-- Le 256 px v3 fait encore moins de fausses alertes (1 sur 433), mais rate plus de la moitié des inondations (44 %) : son seuil « inconnu » est plus haut (0,87). La pleine résolution aide surtout les petites zones, pour le double du temps (15 ms au lieu de 7) et la même taille de modèle.
+- **Le réseau à 512 px entraîné en v3 est le modèle de référence.** Sur le test, il détecte 72 % des inondations et 95 % des incendies, pour 1,4 % de fausses alertes (6 normales sur 433). C'est presque exactement le 512 px v2 : réentraîner sur les étiquettes propres change peu le test. L'apport de la v3 est surtout une mesure plus juste (les fausses alertes du v2 étaient en partie de vrais brûlés) et un seuil calibré sur une validation propre.
+- **Le seuil « inconnu » règle le compromis.** Avec le seuil strict (0,83), le même réseau ne fait que 2 fausses alertes, mais rate 3 inondations et 1 incendie de plus. Le seuil retenu (0,67) est choisi sur la validation seule ; le test confirme ensuite le compromis.
+- Le 256 px v3 a un rappel incendie un peu meilleur (98 %), mais plus de fausses alertes (1,8 %), dont 4 sur 48 pièges d'eau. La pleine résolution aide surtout les petites zones, pour le double du temps (15 ms au lieu de 7) et la même taille de modèle.
 - **Un seul entraînement par ligne** : un écart de 1 à 2 points, ou de 2 à 3 inondations, entre deux lignes n'est pas significatif. Le 256 px v2 l'a montré (une autre meilleure époque, un autre seuil, un autre compromis).
+
+### Le seuil « inconnu »
+
+Le réseau répond « inconnu » quand sa confiance (la plus haute probabilité) est sous un seuil. Ce seuil est calibré sur la validation : on garde une part fixe des tuiles que le réseau classe correctement, les moins sûres passent en « inconnu » (`onelook.ood.confidence`).
+
+Avec 95 % gardées, le seuil du 512 px v3 montait à 0,83 et envoyait **18 des 66 incendies de validation** en « inconnu ». Balayage sur la validation (`scripts/calibrate.py`) :
+
+| Part gardée | Seuil | Rappel inondation | Rappel incendie | Fausses alertes | « Inconnu » |
+|---|---|---|---|---|---|
+| 95 % (avant) | 0,83 | 87 % | 67 % | 0,3 % | 6,7 % |
+| 97 % | 0,73 | 87 % | 77 % | 0,3 % | 4,3 % |
+| **98 % (retenu)** | **0,67** | **87 %** | **79 %** | **0,5 %** | **3,1 %** |
+| 99 % | 0,59 | 87 % | 82 % | 0,8 % | 1,3 % |
+
+Règle de choix : la part la plus haute dont les fausses alertes de validation restent à 0,5 % au plus. La validation ne compte que 15 inondations, toutes au-dessus de ces seuils : elle ne dit rien du rappel inondation, qui ne se lit que sur le test.
+
+<figure markdown="span">
+  ![Rappels, fausses alertes et part d'inconnu selon le seuil, sur le test](assets/figures/seuil_inconnu_512v3.png)
+  <figcaption>Le même balayage sur le test, pour information (le seuil n'y est pas choisi). Baisser le seuil récupère des inondations, au prix de quelques fausses alertes ; au-delà de 0,85, « inconnu » avale les vraies anomalies.</figcaption>
+</figure>
+
+Deux limites à garder en tête :
+
+- **Le seuil retenu tombe sur une marche.** Une inondation du test (Espagne, 16 % de la tuile) a une confiance de 0,667, juste au-dessus du seuil (0,666). Un seuil de 0,67 l'aurait manquée : sur 25 inondations, le rappel bouge par paliers de 4 points.
+- **Un seuil plus bas laisse moins de place à « inconnu »** pour les phénomènes jamais vus (éruptions, glissements, marées noires). Le lot dédié dira si 0,67 les attrape encore ; sinon, il faudra un autre signal que la seule confiance.
 
 ### Réseau de référence (512 px, v3) : matrice de confusion sur le test
 
@@ -35,16 +60,16 @@ Chaque ligne est une vérité, chaque colonne une décision du modèle. La diago
 
 <figure markdown="span">
   ![Matrice de confusion du réseau à 512 px v3 sur le test](assets/figures/echecs512v3_matrice_confusion.png)
-  <figcaption>Réseau à 512 px entraîné en v3, 546 tuiles de test. Les erreurs sont détaillées tuile par tuile dans <a href="../failure_cases/">Limites et échecs</a>.</figcaption>
+  <figcaption>Réseau à 512 px entraîné en v3, seuil « inconnu » 0,67, 546 tuiles de test. Les erreurs sont détaillées tuile par tuile dans <a href="../failure_cases/">Limites et échecs</a>.</figcaption>
 </figure>
 
 | Vérité \ Décision | Normal | Alerte · inondation | Alerte · incendie | Inconnu |
 |---|---|---|---|---|
-| Normal (433) | 415 | 1 | 1 | 16 |
-| Alerte · inondation (25) | 4 | 15 | 0 | 6 |
-| Alerte · incendie (88) | 2 | 0 | 83 | 3 |
+| Normal (433) | 420 | 3 | 3 | 7 |
+| Alerte · inondation (25) | 5 | 18 | 0 | 2 |
+| Alerte · incendie (88) | 4 | 0 | 84 | 0 |
 
-Sans la décision « inconnu » (on garde toujours la classe la plus probable), le même réseau atteint 76 % de rappel inondation et 95 % de rappel incendie, pour 2,3 % de fausses alertes. « Inconnu » concerne 4,6 % des tuiles. Pour comparaison, le 512 px v2 : 417 / 2 / 4 / 10 sur les normales, 2 / 18 / 0 / 5 sur les inondations, 2 / 0 / 83 / 3 sur les incendies.
+Avec le seuil strict (0,83) : 415 / 1 / 1 / 16 sur les normales, 4 / 15 / 0 / 6 sur les inondations, 2 / 0 / 83 / 3 sur les incendies. Sans « inconnu » (on garde toujours la classe la plus probable) : 76 % de rappel inondation, 95 % de rappel incendie, 2,3 % de fausses alertes.
 
 ### Courbes d'entraînement
 

@@ -88,46 +88,46 @@ C'est exactement la question du contexte (où est l'eau habituellement ?) que la
 
 ## Après correction : 512 px, étiquettes v3
 
-Réseau de référence : réentraîné à pleine résolution sur les étiquettes v3, même jeu de test. La colonne « 512 px v2 » est le réseau à pleine résolution entraîné avant la correction, mesuré lui aussi avec les étiquettes v3.
+Réseau de référence : réentraîné à pleine résolution sur les étiquettes v3, seuil « inconnu » 0,67 (voir [Résultats](results.md#le-seuil-inconnu)), même jeu de test. La colonne « 512 px v2 » est le réseau à pleine résolution entraîné avant la correction ; la colonne « seuil strict » est le réseau v3 avec l'ancien seuil (0,83).
 
 <figure markdown="span">
   ![Matrice de confusion du réseau à 512 px v3](assets/figures/echecs512v3_matrice_confusion.png)
-  <figcaption>Matrice de confusion du réseau à 512 px entraîné en v3, sur le test (546 tuiles hors ambiguës).</figcaption>
+  <figcaption>Matrice de confusion du réseau à 512 px entraîné en v3, seuil 0,67, sur le test (546 tuiles hors ambiguës).</figcaption>
 </figure>
 
-| Erreur | Premier réseau | 512 px v2 | 512 px v3 | Ce qui reste |
-|---|---|---|---|---|
-| Normale → alerte incendie | 2 | 4 | 1 | 1 tuile de désert (sol nu et roches sombres) |
-| Normale → alerte inondation | 3 | 2 | 1 | Mares en Bolivie, sous le seuil d'alerte |
-| Inondation manquée | 9 | 7 | 10 | 7 entre 5 et 10 % de la tuile ; 3 entre 16 et 36 %, en « inconnu » juste sous le seuil |
-| Incendie manqué | 17 | 5 | 5 | 2 petites zones (5 à 7 %), 3 tuiles à 21 ou 22 % (2 prises pour normales, 1 en « inconnu ») |
+| Erreur | Premier réseau | 512 px v2 | 512 px v3, seuil strict | **512 px v3** | Ce qui reste |
+|---|---|---|---|---|---|
+| Normale → alerte incendie | 2 | 4 | 1 | **3** | 1 tuile de désert (nord du Mojave), 2 images avant feu (un lit de rivière sombre) |
+| Normale → alerte inondation | 3 | 2 | 1 | **3** | Rizières au Bangladesh, estuaire de la Hooghly, mares en Bolivie |
+| Inondation manquée | 9 | 7 | 10 | **7** | 6 entre 5 et 10 % de la tuile, 1 à 20 % en « inconnu » |
+| Incendie manqué | 17 | 5 | 5 | **4** | 2 petites zones (5 à 7 %), 2 tuiles à 21 et 22 % du même feu |
 
 <figure markdown="span">
   ![Inondations manquées par le réseau à 512 px v3](assets/figures/echecs512v3_inondations_manquees.jpg)
-  <figcaption>Les 10 inondations manquées par le réseau à 512 px v3, de la plus petite à la plus grande part d'inondation (titre : vérité, décision et confiance). 4 sont prises pour normales (3 au Sri Lanka, 1 en Espagne), les 6 autres vont en « inconnu ».</figcaption>
+  <figcaption>Les 7 inondations manquées par le réseau à 512 px v3, de la plus petite à la plus grande part d'inondation (titre : vérité, décision et confiance). 5 sont prises pour normales (4 au Sri Lanka, 1 en Espagne), 2 vont en « inconnu ».</figcaption>
 </figure>
 
-- **Les étiquettes propres ont surtout supprimé les fausses alertes incendie** : de 4 à 1. Les 2 lits de rivière des images avant feu, pris pour du brûlé par le 512 px v2, passent en « inconnu » : le réseau hésite au lieu d'alerter. Reste une tuile de désert (nord du Mojave), dont la signature en infrarouge court ressemble à celle du brûlé. Aucune pièce d'eau ne déclenche d'alerte.
-- **Les inondations manquées restent à la frontière.** 7 des 10 font entre 5 et 10 % de la tuile, juste au-dessus du seuil d'alerte (4 détectées sur 11 dans cette tranche, contre 11 sur 14 au-delà de 10 %). Les 3 grandes inondations manquées, en Espagne (16, 20 et 36 %), vont en « inconnu », avec une probabilité d'inondation de 0,51 à 0,82 : le réseau penche vers la bonne réponse sans atteindre le seuil.
-- **Ce n'est pas un effet du déséquilibre des classes** : les inondations manquées vont surtout en « inconnu » (6 sur 10), pas en « normal ». Les petites inondations pèsent autant à l'entraînement (43 %) qu'en test (48 %) ; le vrai manque, c'est la **variété** (88 inondations d'entraînement, 6 pays).
-- **Les incendies manqués sont presque les mêmes** qu'avec le 512 px v2 : 4 des 5 sont communs. La tuile brûlée à 97 % qui passait en « inconnu » est maintenant détectée ; une tuile à 22 %, voisine d'une autre tuile manquée du même feu, la remplace.
+- **Les fausses alertes qui restent sont de vraies erreurs, pas des étiquettes fausses.** Côté incendie : une tuile de désert et un lit de rivière sombre, dont la signature en infrarouge court ressemble à celle du brûlé. Côté inondation : de l'eau saisonnière ou mouvante (rizières, estuaire, mares) que la définition d'« inondation » ne tranche pas. Avec le seuil strict, 4 de ces 6 tuiles passaient en « inconnu ».
+- **Les inondations manquées restent à la frontière.** 6 des 7 font entre 5 et 10 % de la tuile, juste au-dessus du seuil d'alerte (5 détectées sur 11 dans cette tranche, contre 13 sur 14 au-delà de 10 %). Les 4 tuiles du Sri Lanka sont prises pour normales avec assurance (confiance de 0,70 à 0,97) : l'eau y occupe des réservoirs ou des étangs que le réseau prend pour une eau habituelle.
+- **Ce n'est pas un effet du déséquilibre des classes.** Le réseau ne rechigne pas à alerter inondation (3 fausses alertes), et les petites inondations pèsent autant à l'entraînement (43 %) qu'en test (48 %). Ce qui manque, c'est la **variété** : 88 inondations d'entraînement, 6 pays.
+- **Les incendies manqués sont les mêmes** qu'avec le 512 px v2, moins un : la tuile brûlée à 97 % qui passait en « inconnu » est maintenant détectée. Restent deux petites zones et deux quarts d'un même feu, à 21 et 22 %.
 
 <figure markdown="span">
   ![Fausses alertes incendie du réseau à 512 px v2](assets/figures/echecs512_fausses_alertes_incendie.jpg)
-  <figcaption>Pour mémoire : les 12 fausses alertes incendie du réseau à 512 px v2 avec les étiquettes v2. Avec l'historique complet des feux, 8 sont recouvertes par un feu de l'année de l'image ou de la précédente (les tuiles rouge-brun en infrarouge court) ; restent les 2 tuiles de désert et les 2 lits de rivière. Le réseau v3 ne garde qu'une tuile de désert.</figcaption>
+  <figcaption>Pour mémoire : les 12 fausses alertes incendie du réseau à 512 px v2 avec les étiquettes v2. Avec l'historique complet des feux, 8 sont recouvertes par un feu de l'année de l'image ou de la précédente (les tuiles rouge-brun en infrarouge court) ; restent 2 tuiles de désert et 2 lits de rivière. Le réseau v3 garde 1 tuile de désert et les 2 lits de rivière.</figcaption>
 </figure>
 
 ## Inconnus et tuiles ambiguës
 
-- **55 tuiles du test (7 %) passent en « inconnu »** avec le réseau v3, dont 16 normales (3,7 %), 6 inondations et 3 incendies. « Inconnu » attrape surtout des cas limites, ce qui est son rôle. Son efficacité sur de vrais phénomènes jamais vus (éruptions, glissements, marées noires) reste à mesurer avec le lot dédié.
-- Sur les **201 tuiles ambiguës**, le réseau répond « normal » 121 fois, « inconnu » 30 fois et alerte 50 fois. 159 de ces tuiles sont des normales recouvertes par un feu récent : le réseau alerte incendie sur 49 d'entre elles, ce qui confirme que ces cicatrices se voient bien sur l'image.
+- **20 tuiles du test (2,7 %) passent en « inconnu »** avec le réseau v3 et le seuil 0,67 : 7 normales, 2 inondations et 11 tuiles ambiguës. Avec le seuil strict, c'était 55 tuiles (7 %). « Inconnu » attrape surtout des cas limites, ce qui est son rôle. Son efficacité sur de vrais phénomènes jamais vus (éruptions, glissements, marées noires) reste à mesurer avec le lot dédié, d'autant plus que le seuil a baissé.
+- Sur les **201 tuiles ambiguës**, le réseau répond « normal » 136 fois, « inconnu » 11 fois et alerte 54 fois. 159 de ces tuiles sont des normales recouvertes par un feu récent : le réseau alerte incendie sur 50 d'entre elles, ce qui confirme que ces cicatrices se voient bien sur l'image.
 
 ## Pistes d'amélioration, par ordre d'effet attendu
 
-1. ~~Nettoyer les étiquettes incendie~~ avec l'historique des périmètres de feux : fait (étiquettes v3, 9 novembre), puis réentraînement : les fausses alertes passent de 1,4 à 0,5 %.
-2. **Clarifier l'eau saisonnière** : décider, avec le mentor, si une rizière ou un réservoir saisonnier en eau mérite une alerte, et rendre les étiquettes cohérentes avec ce choix.
+1. ~~Nettoyer les étiquettes incendie~~ avec l'historique des périmètres de feux : fait (étiquettes v3, 9 novembre), puis réentraînement.
+2. **Clarifier l'eau saisonnière** : décider, avec le mentor, si une rizière, un estuaire ou un réservoir saisonnier en eau mérite une alerte, et rendre les étiquettes cohérentes avec ce choix. C'est maintenant la première source de fausses alertes inondation.
 3. **Plus d'inondations, et plus variées** (WorldFloods, licence à vérifier) : 88 tuiles de 6 pays, c'est le point faible.
-4. **Régler le seuil « inconnu »** selon la priorité : moins de fausses alertes, ou plus de détections. 3 inondations manquées sont à moins de 0,05 du seuil.
+4. ~~Régler le seuil « inconnu »~~ : fait, 98 % des bonnes réponses de validation gardées au lieu de 95 % ; à revoir avec le lot de phénomènes jamais vus.
 5. ~~Entraîner à 512 px~~ : fait, la pleine résolution aide les petites zones pour le double du temps.
 
 ## Limites connues

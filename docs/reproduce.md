@@ -69,6 +69,7 @@ Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en 
 | Baselines, entraînement, évaluation, rangement des résultats | Colab (GPU T4) | `notebooks/03_colab_entrainement.ipynb` |
 | Récupérer les résultats | Local | `uv run hf download Elfried9684/onelook-alert-runs --include "runs/*" --local-dir .` |
 | Réévaluer un modèle exporté (mesures, taille, temps sur un cœur) | Local ou Colab | `uv run python scripts/evaluate.py runs/<nom> --split test` |
+| Recalibrer le seuil « inconnu » sans réentraîner (après `evaluate.py --split val`), puis réévaluer le test | Local | `uv run python scripts/calibrate.py runs/<nom> [--figure docs/assets/figures/seuil.png]` |
 
 Les scripts appelés par les notebooks sont dans `scripts/` : `baselines.py`, `train.py` (`--smoke` pour un essai de deux pas sur 24 tuiles) et `evaluate.py` ; les planches d'erreurs de la page Limites et échecs viennent de `uv run python scripts/failure_figures.py runs/<nom>`. Les résultats (`runs/`) vont dans un dépôt privé Hugging Face, jamais dans Git.
 
