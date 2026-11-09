@@ -1,7 +1,7 @@
 """Planches des erreurs d'un modèle sur le test, pour la page Limites et échecs.
 
-Usage : uv run python scripts/failure_figures.py runs/mobilenet_v3_small_256
-Lit les décisions (decisions_test_model.csv) et le paquet ; écrit docs/assets/figures/echecs_*.jpg.
+Usage : uv run python scripts/failure_figures.py runs/mobilenet_v3_small_256 [--prefix echecs] [--max 8]
+Lit les décisions (decisions_test_model.csv) et le paquet ; écrit docs/assets/figures/<prefix>_*.jpg.
 Chaque tuile est montrée en couleurs naturelles et en infrarouge court (B12, B08, B04), où le brûlé
 ressort en rouge-brun et l'eau en noir, avec la vérité terrain en contour.
 """
@@ -38,7 +38,7 @@ def views(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return natural, swir, tile["truth"]
 
 
-def sheet(rows: pd.DataFrame, pack: Path, title: str, name: str, per_row: int = 4) -> None:
+def sheet(rows: pd.DataFrame, pack: Path, title: str, name: str, per_row: int = 4, out: Path = OUT) -> None:
     n = len(rows)
     cols = min(per_row, n)
     lines = int(np.ceil(n / cols))
@@ -65,10 +65,10 @@ def sheet(rows: pd.DataFrame, pack: Path, title: str, name: str, per_row: int = 
         axes[2 * (k // cols) + 1, k % cols].set_visible(False)
     fig.suptitle(title, fontsize=10, x=0.01, ha="left")
     fig.tight_layout()
-    OUT.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT / name, dpi=55, bbox_inches="tight", pil_kwargs={"quality": 82})
+    out.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out / name, dpi=55, bbox_inches="tight", pil_kwargs={"quality": 82})
     plt.close(fig)
-    print(f"{name} : {n} tuiles, {(OUT / name).stat().st_size / 1024:.0f} Ko")
+    print(f"{name} : {n} tuiles, {(out / name).stat().st_size / 1024:.0f} Ko")
 
 
 def load(run: Path, pack: Path) -> pd.DataFrame:
@@ -83,20 +83,26 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("run", type=Path)
     parser.add_argument("--pack", type=Path, default=ROOT / "data" / "pack")
+    parser.add_argument("--out", type=Path, default=OUT)
+    parser.add_argument("--prefix", default="echecs", help="Début du nom des fichiers")
+    parser.add_argument("--max", type=int, default=8, help="Nombre maximal de tuiles par planche")
     args = parser.parse_args()
     df = load(args.run, args.pack)
+    pre, top = args.prefix, args.max
 
     normal = df[df.label == "normal"]
-    sheet(normal[normal.decision == "alerte_incendie"].sort_values("conf", ascending=False).head(8), args.pack,
-          "Fausses alertes incendie (normales prises pour un incendie)", "echecs_fausses_alertes_incendie.jpg")
+    sheet(normal[normal.decision == "alerte_incendie"].sort_values("conf", ascending=False).head(top), args.pack,
+          "Fausses alertes incendie (normales prises pour un incendie)", f"{pre}_fausses_alertes_incendie.jpg",
+          out=args.out)
     sheet(normal[normal.decision == "alerte_inondation"], args.pack,
-          "Fausses alertes inondation", "echecs_fausses_alertes_inondation.jpg", per_row=3)
+          "Fausses alertes inondation", f"{pre}_fausses_alertes_inondation.jpg", per_row=3, out=args.out)
     flood = df[df.label == "alerte_inondation"]
-    sheet(flood[flood.decision != "alerte_inondation"].sort_values("frac_flood"), args.pack,
-          "Inondations manquées (contour bleu : eau d'inondation annotée)", "echecs_inondations_manquees.jpg", per_row=5)
+    sheet(flood[flood.decision != "alerte_inondation"].sort_values("frac_flood").head(top), args.pack,
+          "Inondations manquées (contour bleu : eau d'inondation annotée)", f"{pre}_inondations_manquees.jpg",
+          per_row=5, out=args.out)
     fire = df[df.label == "alerte_incendie"]
-    sheet(fire[fire.decision != "alerte_incendie"].sort_values("frac_burned").head(8), args.pack,
-          "Incendies manqués (contour jaune : zone brûlée annotée)", "echecs_incendies_manques.jpg")
+    sheet(fire[fire.decision != "alerte_incendie"].sort_values("frac_burned").head(top), args.pack,
+          "Incendies manqués (contour jaune : zone brûlée annotée)", f"{pre}_incendies_manques.jpg", out=args.out)
 
 
 if __name__ == "__main__":
