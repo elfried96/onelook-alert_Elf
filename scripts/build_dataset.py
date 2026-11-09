@@ -152,10 +152,7 @@ def stage_water(limit: int | None, workers: int) -> None:
 
 def stage_fire_history(limit: int | None, workers: int) -> None:
     """Part de chaque tuile de Californie couverte par des feux des années précédentes (fire_history.jsonl)."""
-    perimeters = ROOT / "data" / "raw" / "fire_history" / "nifc_californie_2012_2022.geojson"
-    if not perimeters.exists():
-        fire_history.download(perimeters, 2012, 2022)
-    fires = fire_history.load(perimeters)
+    fires = fire_history.load(*fire_history.download_all(ROOT / "data" / "raw" / "fire_history"))
     log = DATASET / "fire_history.jsonl"
     done = build.done_ids(log)
     west, south, east, north = fire_history.CALIFORNIA

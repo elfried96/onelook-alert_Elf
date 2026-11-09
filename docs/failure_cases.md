@@ -1,6 +1,6 @@
 # Limites et échecs
 
-Le sujet demande une analyse des cas d'échec. Cette page décrit d'abord les erreurs du premier réseau (MobileNetV3-Small, 256 px, étiquettes v1, avec « inconnu ») sur le **jeu de test**, puis ce qui reste après la correction des étiquettes et l'entraînement à 512 px ([plus bas](#apres-correction-512-px-etiquettes-v2)), image par image : ce que le modèle a répondu, la bonne réponse, et l'explication la plus probable.
+Le sujet demande une analyse des cas d'échec. Cette page décrit d'abord les erreurs du premier réseau (MobileNetV3-Small, 256 px, étiquettes v1, avec « inconnu ») sur le **jeu de test**, puis ce qui reste après la correction des étiquettes et l'entraînement à 512 px ([plus bas](#apres-correction-512-px-etiquettes-v3)), image par image : ce que le modèle a répondu, la bonne réponse, et l'explication la plus probable.
 
 Les planches sont produites par `scripts/failure_figures.py` à partir des décisions enregistrées (`runs/mobilenet_v3_small_256/decisions_test_model.csv`). Chaque tuile est montrée deux fois : en couleurs naturelles, puis en **infrarouge court** (B12, B08, B04), où le sol brûlé ressort en rouge-brun, l'eau en noir ou bleu sombre et la végétation en vert. Le contour bleu marque l'eau d'inondation annotée, le contour jaune la zone brûlée annotée. Le titre donne la vérité, la décision et la confiance du modèle.
 
@@ -36,13 +36,15 @@ Mesure à l'appui : la part de pixels au « brûlé apparent » (NBR < −0,05 e
 - le taux de fausses alertes incendie mesuré (3,2 % des normales) est **surestimé** ;
 - à l'entraînement, ces tuiles apprennent au modèle à ignorer de vraies cicatrices, ce qui peut lui coûter des détections.
 
-**Correction appliquée (6 novembre) :** les périmètres de l'historique fédéral NIFC (qui regroupe ceux de CAL FIRE) des 3 années précédant l'image, plus celle de l'image, sont croisés avec chaque tuile de Californie. Une normale recouverte à plus de 0,5 % passe en ambiguë (détail dans [Étiquettes et découpage](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)).
+**Correction appliquée (étiquettes v3, 9 novembre) :** les périmètres de l'historique fédéral NIFC (qui regroupe ceux de CAL FIRE) de l'année de l'image et de l'année précédente sont croisés avec chaque tuile de Californie. Une normale recouverte à plus de 0,5 % passe en ambiguë (détail dans [Étiquettes et découpage](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)).
 
-- **9 des 17 fausses alertes** sont recouvertes par un feu récent. Les deux images avant feu de fin août 2019 le sont par le feu Long Valley de juillet 2019 : la « cicatrice plus ancienne » vue sur la planche était fraîche de quelques semaines.
-- Les normales recouvertes déclenchent près de trois fois plus de fausses alertes que les autres (7,4 % contre 2,7 %).
-- **Même modèle, étiquettes v2 :** la précision incendie passe de 81 à 90 %, et les fausses alertes de 3,8 à 2,7 %. Rien n'a changé dans le modèle, seulement dans ce qu'on lui reprochait.
+- **15 des 17 fausses alertes** sont recouvertes par un feu récent. Les deux images avant feu de fin août 2019 le sont par le feu Long Valley de juillet 2019 : la « cicatrice plus ancienne » vue sur la planche était fraîche de quelques semaines.
+- Les normales recouvertes déclenchent une fausse alerte incendie dans 15 % des cas, les autres dans 0,6 % des cas.
+- **Même modèle, étiquettes v3 :** la précision incendie passe de 81 à 97 %, et les fausses alertes de 3,8 à 1,2 %. Rien n'a changé dans le modèle, seulement dans ce qu'on lui reprochait.
 
-Les 8 fausses alertes restantes (sols sombres, lits de rivière, brûlis absents de l'historique) sont de vraies erreurs du modèle. Le réentraînement sur les étiquettes v2 dira si un apprentissage plus propre les réduit.
+Les 2 fausses alertes restantes sont les images avant feu du lit de rivière sombre : de vraies erreurs du modèle.
+
+Une première version de cette correction (v2, 6 novembre) utilisait un historique presque vide après 2019 et n'expliquait que 9 des 17 fausses alertes. L'examen des erreurs du réseau à 512 px a révélé le trou.
 
 ## Fausses alertes inondation : l'eau saisonnière
 
@@ -84,20 +86,30 @@ C'est exactement la question du contexte (où est l'eau habituellement ?) que la
 - Les masques viennent des **périmètres** CAL FIRE : ils englobent des îlots de végétation intacte ou peu touchée (3e tuile). Une partie du « brûlé annoté » n'est pas visible comme tel.
 - Une image réduite à 256 × 256 perd les détails fins : l'essai à 512 px dira si la pleine résolution aide.
 
-## Après correction : 512 px, étiquettes v2
+## Après correction : 512 px, étiquettes v3
 
-Réseau réentraîné à pleine résolution sur les étiquettes v2, même jeu de test.
+Réseau réentraîné à pleine résolution (sur les étiquettes v2), mesuré avec les étiquettes v3, même jeu de test.
 
-| Erreur | Premier réseau (v2) | 512 px, v2 | Ce qui reste |
+<figure markdown="span">
+  ![Matrice de confusion du réseau à 512 px](assets/figures/echecs512_matrice_confusion.png)
+  <figcaption>Matrice de confusion du réseau à 512 px sur le test (546 tuiles hors ambiguës).</figcaption>
+</figure>
+
+| Erreur | Premier réseau | 512 px | Ce qui reste |
 |---|---|---|---|
-| Normale → alerte incendie | 8 | 12 | 10 quarts CaBuAr voisins du feu de l'événement, 2 images avant feu (le lit de rivière sombre déjà vu) |
+| Normale → alerte incendie | 2 | 4 | 2 tuiles de désert (sol nu et roches sombres), 2 images avant feu (le lit de rivière sombre déjà vu) |
 | Normale → alerte inondation | 3 | 2 | Rizières au Bangladesh, mares en Bolivie (sous le seuil d'alerte) |
 | Inondation manquée | 9 | 7 | Toutes entre 5 et 10 % de la tuile, juste au-dessus du seuil d'alerte |
 | Incendie manqué | 17 | 5 | 2 petites zones (5 à 7 %), 2 tuiles à 21 % prises pour normales, 1 tuile brûlée à 97 % classée « inconnu » |
 
+<figure markdown="span">
+  ![Fausses alertes incendie du réseau à 512 px](assets/figures/echecs512_fausses_alertes_incendie.jpg)
+  <figcaption>Les 12 fausses alertes incendie du réseau à 512 px avec les étiquettes v2. Avec l'historique complet des feux, 8 sont recouvertes par un feu de l'année de l'image ou de la précédente (les tuiles rouge-brun en infrarouge court) ; restent les 2 tuiles de désert et les 2 lits de rivière.</figcaption>
+</figure>
+
 - **La pleine résolution règle surtout les incendies** : 12 incendies manqués de moins, dont la plupart des petites zones en bord de tuile.
-- **Les inondations manquées restent à la frontière** : la plus grande ne couvre que 10 % de la tuile. Sur les 9 manquées par le premier réseau, le nouveau en retrouve 3, mais en manque 1 autre.
-- **Les fausses alertes incendie ont changé de nature.** Les anciennes cicatrices sont écartées ; 10 des 12 restantes sont des quarts CaBuAr voisins du feu annoté, sans périmètre connu dans l'historique. Hypothèses à vérifier : fumée ou cendres en bordure du feu, ou brûlé hors du masque CaBuAr. Les fausses alertes incendie hors Californie restent nulles.
+- **Les inondations manquées restent à la frontière** : toutes les inondations de plus de 10 % de la tuile sont détectées (13 sur 13), contre 5 sur 12 entre 5 et 10 %. Ce n'est pas un effet du déséquilibre des classes : les misses vont surtout en « inconnu » (5 sur 7), pas en « normal », et le modèle ne rechigne pas à alerter (2 fausses alertes inondation seulement).
+- **Les fausses alertes incendie restantes sont de vraies erreurs** : sols arides et lits de rivière, dont la signature en infrarouge court ressemble à celle du brûlé. Aucune hors de Californie.
 
 ## Inconnus et tuiles ambiguës
 
@@ -106,7 +118,7 @@ Réseau réentraîné à pleine résolution sur les étiquettes v2, même jeu de
 
 ## Pistes d'amélioration, par ordre d'effet attendu
 
-1. ~~Nettoyer les étiquettes incendie~~ avec l'historique des périmètres de feux : fait le 6 novembre (étiquettes v2), réentraînement en cours.
+1. ~~Nettoyer les étiquettes incendie~~ avec l'historique des périmètres de feux : fait (étiquettes v3, 9 novembre) ; réentraînement sur la v3 à faire.
 2. **Clarifier l'eau saisonnière** : décider, avec le mentor, si une rizière ou un réservoir saisonnier en eau mérite une alerte, et rendre les étiquettes cohérentes avec ce choix.
 3. **Entraîner à 512 px** pour les petites zones brûlées et les filets d'eau, et mesurer le coût en temps.
 4. **Régler le seuil « inconnu »** selon la priorité : moins de fausses alertes, ou plus de détections.
@@ -116,4 +128,4 @@ Réseau réentraîné à pleine résolution sur les étiquettes v2, même jeu de
 - 25 inondations en test : une tuile représente 4 points de rappel.
 - Tous les incendies sont californiens, y compris en test.
 - Le seuil « inconnu » est calibré sur 501 tuiles de validation, dont 15 inondations.
-- Les étiquettes incendie v2 écartent les cicatrices de moins de 3 ans connues de l'historique ; un brûlis plus ancien ou non répertorié peut encore rester dans une normale.
+- Les étiquettes incendie v3 écartent les cicatrices de l'année de l'image et de l'année précédente connues de l'historique ; un brûlis plus ancien ou non répertorié peut encore rester dans une normale.

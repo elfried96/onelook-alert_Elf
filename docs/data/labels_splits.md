@@ -21,23 +21,26 @@ Trois choix à noter :
 
 CaBuAr n'annote que l'incendie de l'événement. Les cicatrices des feux des années précédentes, encore visibles sur l'image, restaient donc « normales ». L'[analyse des échecs](../failure_cases.md) l'a montré : le réseau prenait certaines de ces tuiles pour des incendies, à raison.
 
-Correction (6 novembre, module `onelook.data.fire_history`, étape `fire_history` de `scripts/build_dataset.py`) :
+Correction (module `onelook.data.fire_history`, étape `fire_history` de `scripts/build_dataset.py`) :
 
-1. Télécharger les périmètres des feux de Californie de 2012 à 2022 dans l'historique fédéral NIFC (*InterAgency Fire Perimeter History*, 5 763 périmètres, qui regroupe ceux de CAL FIRE et des agences fédérales).
-2. Mesurer, sur chaque tuile de Californie, la part couverte par un feu de l'année de l'image ou des 3 années précédentes (`fire_history_years: 3` dans `configs/labels.yaml`).
+1. Télécharger les périmètres des feux de Californie de 2012 à 2022 dans l'historique fédéral NIFC (*InterAgency Fire Perimeter History*), qui regroupe ceux de CAL FIRE et des agences fédérales : 8 307 périmètres, de 445 à 1 211 par an.
+2. Mesurer, sur chaque tuile de Californie, la part couverte par un feu de l'année de l'image ou de l'année précédente (`fire_history_years: 1` dans `configs/labels.yaml`).
 3. Une normale couverte à plus de 0,5 % passe en **ambiguë**, comme une tuile avec un peu d'anomalie.
 
-Les feux de l'année de l'image comptent : l'historique ne donne que l'année, pas la date de fin, et un feu de l'été précédant une image d'automne est bien visible. Effet : **377 normales californiennes** (21 %) passent en ambiguës, dont 121 en test. Aucune autre étiquette ne change.
+Les feux de l'année de l'image comptent : l'historique ne donne que l'année, pas la date de fin, et un feu de l'été précédant une image d'automne est bien visible. Les images avant feu ne sont pas touchées par le feu de leur événement : elles sont prises environ un an avant l'image après feu. Effet : **317 normales californiennes** (18 %) passent en ambiguës, dont 97 en test. Aucune autre étiquette ne change.
 
-| Fenêtre (années avant l'image) | Normales écartées | Fausses alertes incendie du premier réseau expliquées |
+| Fenêtre | Normales écartées | Fausses alertes incendie du premier réseau expliquées |
 |---|---|---|
-| Année de l'image seule | 39 | 3 sur 17 |
-| 1 an | 136 | 6 sur 17 |
-| 2 ans | 261 | 7 sur 17 |
-| **3 ans (retenu)** | **377** | **9 sur 17** |
-| 5 ans | 539 | 9 sur 17 |
+| Année de l'image seule | 182 | 12 sur 17 |
+| **+ 1 an (retenu)** | **317** | **15 sur 17** |
+| + 2 ans | 426 | 15 sur 17 |
+| + 3 ans | 525 | 15 sur 17 |
+| + 5 ans | 658 | 15 sur 17 |
 
-Au-delà de 3 ans, on écarte beaucoup plus de normales sans expliquer davantage d'erreurs : la végétation a repoussé.
+Au-delà d'un an, on écarte beaucoup plus de normales sans expliquer davantage d'erreurs : la végétation repousse vite après un feu de broussailles. Les 2 fausses alertes restantes sont de vraies erreurs (lit de rivière sombre).
+
+!!! warning "Historique : v2 puis v3"
+    La première version de cette correction (étiquettes v2, 6 novembre) n'utilisait que la vue « toutes années » de NIFC. Elle ne contient presque rien après 2019 (12 feux en Californie en 2020, 4 en 2021), alors que la plupart des images CaBuAr datent de 2020 et 2021. L'examen des fausses alertes du réseau à 512 px l'a révélé : des tuiles manifestement brûlées n'étaient couvertes par aucun périmètre. Les étiquettes v3 (9 novembre) ajoutent l'historique de la décennie 2020 (`InterAgencyFirePerimeterHistory_2020s_Read_Only`) ; avec l'historique complet, une fenêtre d'un an suffit, au lieu des 3 ans choisis en v2.
 
 La décision <span class="ol-badge ol-badge--unknown">Inconnu</span> n'est pas une classe apprise : elle viendra du score de confiance du modèle, calibré sur la validation, et sera testée sur un lot de phénomènes jamais vus.
 

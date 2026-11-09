@@ -17,16 +17,21 @@ from rasterio.warp import transform_geom
 
 from onelook.data.l2a import Grid
 
-SERVICE = ("https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/"
-           "InterAgencyFirePerimeterHistory_All_Years_View/FeatureServer/0/query")
+NIFC = "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/{}/FeatureServer/0/query"
+# La vue « toutes années » ne contient presque rien après 2019 (12 feux en Californie en 2020) :
+# les années 2020 et suivantes viennent de l'historique de la décennie.
+SOURCES = {
+    "nifc_californie_2012_2019.geojson": ("InterAgencyFirePerimeterHistory_All_Years_View", 2012, 2019),
+    "nifc_californie_2020_2022.geojson": ("InterAgencyFirePerimeterHistory_2020s_Read_Only", 2020, 2022),
+}
 CALIFORNIA = (-124.5, 32.5, -114.0, 42.0)
 PAGE = 500
 SIMPLIFY_DEG = 0.0003  # environ 30 m : bien en dessous d'un pixel de la grille de mesure
 MEASURE_SIZE = 128  # grille de mesure (40 m) : suffisante pour une part de tuile
 
 
-def download(out: Path, first_year: int, last_year: int, bbox: tuple = CALIFORNIA) -> Path:
-    """Télécharge les périmètres (GeoJSON, WGS84) des feux de first_year à last_year dans bbox."""
+def download(out: Path, service: str, first_year: int, last_year: int, bbox: tuple = CALIFORNIA) -> Path:
+    """Télécharge les périmètres (GeoJSON, WGS84) d'un service NIFC, feux de first_year à last_year dans bbox."""
     features, offset = [], 0
     while True:
         params = {
@@ -36,7 +41,7 @@ def download(out: Path, first_year: int, last_year: int, bbox: tuple = CALIFORNI
             "outSR": 4326, "maxAllowableOffset": SIMPLIFY_DEG, "geometryPrecision": 5,
             "resultOffset": offset, "resultRecordCount": PAGE, "orderByFields": "OBJECTID", "f": "geojson",
         }
-        response = requests.get(SERVICE, params=params, timeout=120)
+        response = requests.get(NIFC.format(service), params=params, timeout=120)
         response.raise_for_status()
         page = response.json()["features"]
         features += [f for f in page if f.get("geometry")]
@@ -48,10 +53,21 @@ def download(out: Path, first_year: int, last_year: int, bbox: tuple = CALIFORNI
     return out
 
 
-def load(path: Path) -> list[dict]:
+def download_all(folder: Path) -> list[Path]:
+    """Télécharge les sources manquantes de SOURCES dans folder ; renvoie leurs chemins."""
+    paths = []
+    for name, (service, first_year, last_year) in SOURCES.items():
+        if not (folder / name).exists():
+            download(folder / name, service, first_year, last_year)
+        paths.append(folder / name)
+    return paths
+
+
+def load(*paths: Path) -> list[dict]:
     """Périmètres sous la forme {year, name, geometry, bbox} (bbox en WGS84, pour filtrer vite)."""
+    features = [f for path in paths for f in json.loads(Path(path).read_text())["features"]]
     fires = []
-    for feature in json.loads(Path(path).read_text())["features"]:
+    for feature in features:
         coords = np.concatenate([np.asarray(ring)[:, :2] for ring in _rings(feature["geometry"])])
         fires.append({"year": int(feature["properties"]["FIRE_YEAR_INT"]),
                       "name": feature["properties"].get("INCIDENT"), "geometry": feature["geometry"],

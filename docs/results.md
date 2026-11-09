@@ -1,29 +1,30 @@
 # Résultats
 
-Tableau comparatif des approches testées, demandé par le sujet. Toutes les mesures sont faites sur le même **jeu de test** : 747 tuiles de zones jamais vues à l'entraînement, dont 643 hors tuiles ambiguës (530 normales, 25 inondations, 88 incendies). Les définitions sont dans `onelook.evaluation.metrics`.
+Tableau comparatif des approches testées, demandé par le sujet. Toutes les mesures sont faites sur le même **jeu de test** : 747 tuiles de zones jamais vues à l'entraînement, dont 546 hors tuiles ambiguës (433 normales, 25 inondations, 88 incendies). Les définitions sont dans `onelook.evaluation.metrics`.
 
-!!! note "Étiquettes v2 (6 novembre)"
-    Toutes les mesures ci-dessous utilisent les étiquettes v2 : les normales californiennes recouvertes par un feu récent sont écartées (voir [anciens feux](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)). Test v2 : 522 tuiles hors ambiguës (409 normales, 25 inondations, 88 incendies). Entraînements sur Colab (`notebooks/03_colab_entrainement.ipynb`), temps mesurés en local. Quantification et piste VLM à venir.
+!!! note "Étiquettes v3 (9 novembre)"
+    Les réseaux sont mesurés avec les étiquettes v3 : les normales californiennes recouvertes par un feu de l'année de l'image ou de l'année précédente sont écartées (voir [anciens feux](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)). Ils ont été entraînés avant, sur les étiquettes v1 ou v2 : un réentraînement sur la v3 reste à faire. Entraînements sur Colab (`notebooks/03_colab_entrainement.ipynb`), temps mesurés en local. Quantification et piste VLM à venir.
 
 | Approche | Précision (inond. · incendie) | Rappel (inond. · incendie) | Fausses alertes | Fausses alertes sur l'eau | Taille (Mo) | Temps (ms) |
 |---|---|---|---|---|---|---|
-| Seuils NDWI + NBR | 13 % · 83 % | 52 % · 77 % | 24 % | 88 % | 0,00 | 17 ¹ |
-| Classifieur sur statistiques | 48 % · 82 % | 52 % · 63 % | 6,4 % | 27 % | 2,70 | 33 ¹ |
-| MobileNetV3-Small, 256 px, étiquettes v1 ³ | 84 % · 90 % | 64 % · 81 % | 2,7 % | 2,1 % | 6,10 | 7,6 ² |
-| MobileNetV3-Small, 256 px, étiquettes v2 | 90 % · 79 % | 76 % · 97 % | 6,1 % | 8,3 % | 6,10 | 7,9 ² |
-| **MobileNetV3-Small, 512 px, étiquettes v2** | **90 % · 87 %** | **72 % · 94 %** | **3,4 %** | **2,1 %** | **6,10** | **14,4 ²** |
+| Seuils NDWI + NBR ⁴ | 13 % · 83 % | 52 % · 77 % | 24 % | 88 % | 0,00 | 17 ¹ |
+| Classifieur sur statistiques ⁴ | 48 % · 82 % | 52 % · 63 % | 6,4 % | 27 % | 2,70 | 33 ¹ |
+| MobileNetV3-Small, 256 px, entraîné en v1 | 84 % · 97 % | 64 % · 81 % | 1,2 % | 2,1 % | 6,10 | 7,6 ² |
+| MobileNetV3-Small, 256 px, entraîné en v2 | 90 % · 84 % | 76 % · 97 % | 4,2 % | 8,3 % | 6,10 | 7,9 ² |
+| **MobileNetV3-Small, 512 px, entraîné en v2** | **90 % · 95 %** | **72 % · 94 %** | **1,4 %** | **2,1 %** | **6,10** | **14,4 ²** |
 | MobileNetV3-Small, ONNX quantifié | – | – | – | – | – | – |
 | Petit VLM compressé | – | – | – | – | – | – |
 
-Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H. ³ Entraîné sur les étiquettes v1, mesuré sur le test v2.
+Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H. ⁴ Mesuré sur le test v2 (522 tuiles) : les baselines seront remesurées avec le prochain passage sur Colab.
 
 **Lecture rapide :**
 
 - Les seuils voient « de l'eau », pas « de l'eau inhabituelle » : 88 % des pièges d'eau (océan, fleuve, lac, rizières) déclenchent une alerte inondation.
 - Le classifieur sur statistiques réduit les fausses alertes (6 %), mais rate plus d'un incendie sur trois : une zone brûlée de 5 à 15 % de la tuile se noie dans des moyennes.
-- **Le réseau à 512 px est le meilleur compromis.** Par rapport au premier réseau, il détecte 12 incendies de plus (94 % au lieu de 81 %) et 2 inondations de plus, pour quelques fausses alertes en plus (3,4 % au lieu de 2,7 %). Hors Californie, il ne se trompe que sur 1,8 % des normales, et sur une seule des 48 tuiles pièges d'eau (des rizières au Bangladesh).
+- **Le réseau à 512 px est le meilleur compromis.** Par rapport au premier réseau, il détecte 12 incendies de plus (94 % au lieu de 81 %) et 2 inondations de plus, pour un taux de fausses alertes presque identique (1,4 % au lieu de 1,2 %). Hors Californie, il ne se trompe que sur 1,8 % des normales, et sur une seule des 48 tuiles pièges d'eau (des rizières au Bangladesh).
 - La pleine résolution coûte le double en temps (14 ms au lieu de 8), pour la même taille de modèle : seul le redimensionnement d'entrée change.
-- **Le réseau à 256 px v2 montre la variance d'un entraînement.** Même architecture, étiquettes plus propres, mais une autre meilleure époque (9 au lieu de 13) et un seuil « inconnu » plus bas (0,70 au lieu de 0,84) : il alerte davantage (rappel incendie 97 %) et se trompe plus souvent (6,1 % de fausses alertes). Avec un seul entraînement par ligne, un écart de 1 à 2 points entre deux lignes n'est pas significatif.
+- **Le réseau à 256 px v2 montre la variance d'un entraînement.** Même architecture, mais une autre meilleure époque (9 au lieu de 13) et un seuil « inconnu » plus bas (0,70 au lieu de 0,84) : il alerte davantage (rappel incendie 97 %) et se trompe plus souvent (4,2 % de fausses alertes). Avec un seul entraînement par ligne, un écart de 1 à 2 points entre deux lignes n'est pas significatif.
+- **La correction des étiquettes a changé la lecture des erreurs.** Sur le test v1, le premier réseau semblait faire 3,8 % de fausses alertes ; 15 des 17 fausses alertes incendie étaient en fait de vrais brûlés absents des étiquettes.
 
 ### Réseau à 512 px : matrice de confusion sur le test
 
@@ -31,16 +32,16 @@ Chaque ligne est une vérité, chaque colonne une décision du modèle. La diago
 
 <figure markdown="span">
   ![Matrice de confusion du réseau à 512 px sur le test](assets/figures/echecs512_matrice_confusion.png)
-  <figcaption>Réseau à 512 px, étiquettes v2, 522 tuiles de test. Les erreurs sont détaillées tuile par tuile dans <a href="../failure_cases/">Limites et échecs</a>.</figcaption>
+  <figcaption>Réseau à 512 px, étiquettes v3, 546 tuiles de test. Les erreurs sont détaillées tuile par tuile dans <a href="../failure_cases/">Limites et échecs</a>.</figcaption>
 </figure>
 
 | Vérité \ Décision | Normal | Alerte · inondation | Alerte · incendie | Inconnu |
 |---|---|---|---|---|
-| Normal (409) | 382 | 2 | 12 | 13 |
+| Normal (433) | 417 | 2 | 4 | 10 |
 | Alerte · inondation (25) | 2 | 18 | 0 | 5 |
 | Alerte · incendie (88) | 2 | 0 | 83 | 3 |
 
-Sans la décision « inconnu » (on garde toujours la classe la plus probable), le même réseau atteint 88 % de rappel inondation et 97 % de rappel incendie, pour 4,4 % de fausses alertes. « Inconnu » ne concerne que 4 % des tuiles, contre 7 % pour le premier réseau.
+Sans la décision « inconnu » (on garde toujours la classe la plus probable), le même réseau atteint 88 % de rappel inondation et 97 % de rappel incendie, pour 1,8 % de fausses alertes. « Inconnu » ne concerne que 3 % des tuiles.
 
 ### Courbes d'entraînement
 

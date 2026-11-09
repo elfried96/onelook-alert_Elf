@@ -12,6 +12,7 @@ fire_alert: 0.05    # au moins 5 % de la tuile brûlée récemment
 normal_max: 0.005   # moins de 0,5 % : la tuile est normale
 
 # Anciens feux (Californie) : CaBuAr n'annote que le feu de l'événement. Une normale dont plus de normal_max
-# de la surface a brûlé dans les fire_history_years dernières années (année de l'image comprise, périmètres
-# NIFC) montre souvent une cicatrice encore visible : elle passe en ambiguë.
-fire_history_years: 3
+# de la surface a brûlé l'année de l'image ou dans les fire_history_years années précédentes (périmètres NIFC)
+# montre souvent une cicatrice encore visible : elle passe en ambiguë. Un an suffit : une fenêtre plus longue
+# écarte bien plus de normales sans expliquer davantage de fausses alertes (voir docs/data/labels_splits.md).
+fire_history_years: 1

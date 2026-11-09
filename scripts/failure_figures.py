@@ -112,7 +112,7 @@ def confusion_figure(df: pd.DataFrame, title: str, name: str, out: Path = OUT) -
 def load(run: Path, pack: Path) -> pd.DataFrame:
     decisions = pd.read_csv(run / "decisions_test_model.csv")
     index = pd.read_csv(pack / "index.csv")
-    df = decisions.merge(index, on=["id", "label"])
+    df = decisions.drop(columns="label").merge(index, on="id")  # étiquettes de l'index actuel
     df["conf"] = df[[c for c in df if c.startswith("p_")]].max(axis=1)
     return df
 

@@ -17,7 +17,7 @@ class LabelRules:
     flood_alert: float = 0.05
     fire_alert: float = 0.05
     normal_max: float = 0.005
-    fire_history_years: int = 3
+    fire_history_years: int = 1
 
     @classmethod
     def from_yaml(cls, path: Path) -> LabelRules:
