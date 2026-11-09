@@ -71,6 +71,44 @@ def sheet(rows: pd.DataFrame, pack: Path, title: str, name: str, per_row: int = 
     print(f"{name} : {n} tuiles, {(out / name).stat().st_size / 1024:.0f} Ko")
 
 
+def confusion_figure(df: pd.DataFrame, title: str, name: str, out: Path = OUT) -> None:
+    """Matrice de confusion : nombre de tuiles par vérité (lignes) et décision (colonnes).
+    La teinte suit la part de la ligne (rampe bleue séquentielle), le texte donne nombre et part."""
+    from matplotlib.colors import LinearSegmentedColormap
+
+    truths = [("normal", "Normal"), ("alerte_inondation", "Inondation"), ("alerte_incendie", "Incendie")]
+    decisions = truths + [("inconnu", "Inconnu")]
+    df = df[df.label.isin([t for t, _ in truths])]
+    counts = pd.crosstab(df.label, df.decision).reindex(index=[t for t, _ in truths],
+                                                         columns=[d for d, _ in decisions], fill_value=0)
+    share = counts.div(counts.sum(axis=1), axis=0).to_numpy()
+    ramp = LinearSegmentedColormap.from_list("bleu", ["#ffffff", "#cde2fb", "#86b6ef", "#2a78d6", "#184f95"])
+    fig, ax = plt.subplots(figsize=(6.6, 3.4))
+    ax.imshow(share, cmap=ramp, vmin=0, vmax=1, aspect="auto")
+    for i in range(share.shape[0]):
+        for j in range(share.shape[1]):
+            ink = "#ffffff" if share[i, j] > 0.55 else "#14202b"
+            pct = f"{share[i, j]:.1%}" if 0 < share[i, j] < 0.1 else f"{share[i, j]:.0%}"
+            ax.text(j, i, f"{counts.iat[i, j]}\n{pct.replace('.', ',')}", ha="center", va="center", fontsize=10,
+                    color=ink)
+    ax.set_xticks(range(len(decisions)), [f"Décision\n{n}" for _, n in decisions], fontsize=9, color="#4f5f6b")
+    ax.set_yticks(range(len(truths)), [f"Vérité {n}\n({counts.iloc[i].sum()} tuiles)" for i, (_, n) in enumerate(truths)],
+                  fontsize=9, color="#4f5f6b")
+    ax.set_xticks([x + 0.5 for x in range(len(decisions) - 1)], minor=True)
+    ax.set_yticks([y + 0.5 for y in range(len(truths) - 1)], minor=True)
+    ax.grid(which="minor", color="#ffffff", linewidth=2)
+    ax.tick_params(which="both", length=0)
+    ax.xaxis.tick_top()
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    ax.set_title(title, fontsize=10, loc="left", color="#14202b", pad=34)
+    fig.tight_layout()
+    out.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out / name, dpi=110, bbox_inches="tight")
+    plt.close(fig)
+    print(f"{name} : {len(df)} tuiles")
+
+
 def load(run: Path, pack: Path) -> pd.DataFrame:
     decisions = pd.read_csv(run / "decisions_test_model.csv")
     index = pd.read_csv(pack / "index.csv")
@@ -89,6 +127,8 @@ def main() -> None:
     args = parser.parse_args()
     df = load(args.run, args.pack)
     pre, top = args.prefix, args.max
+    confusion_figure(df, "Matrice de confusion sur le test (tuiles ambiguës exclues)", f"{pre}_matrice_confusion.png",
+                     out=args.out)
 
     normal = df[df.label == "normal"]
     sheet(normal[normal.decision == "alerte_incendie"].sort_values("conf", ascending=False).head(top), args.pack,

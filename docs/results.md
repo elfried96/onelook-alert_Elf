@@ -27,6 +27,13 @@ Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la val
 
 ### Réseau à 512 px : matrice de confusion sur le test
 
+Chaque ligne est une vérité, chaque colonne une décision du modèle. La diagonale compte les bonnes réponses ; hors diagonale, la ligne « Normal » donne les **faux positifs** (fausses alertes), et la colonne « Normal » les **faux négatifs** (anomalies manquées). La teinte suit la part de la ligne.
+
+<figure markdown="span">
+  ![Matrice de confusion du réseau à 512 px sur le test](assets/figures/echecs512_matrice_confusion.png)
+  <figcaption>Réseau à 512 px, étiquettes v2, 522 tuiles de test. Les erreurs sont détaillées tuile par tuile dans <a href="../failure_cases/">Limites et échecs</a>.</figcaption>
+</figure>
+
 | Vérité \ Décision | Normal | Alerte · inondation | Alerte · incendie | Inconnu |
 |---|---|---|---|---|
 | Normal (409) | 382 | 2 | 12 | 13 |
