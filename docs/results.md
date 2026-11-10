@@ -102,6 +102,34 @@ Temps mesurés ensemble, en alternance, sur un cœur de l'i7-10850H : la machine
 
 Sur les 7 tuiles du lot « inconnu » où le phénomène se voit (4 éruptions, 3 glissements de terrain), le réseau de référence répond « normal » 7 fois, avec une confiance de 0,70 à 0,97 ; le réseau à 256 px répond « inconnu » 2 fois. Aucune fausse alerte, mais la décision « inconnu » fondée sur la confiance ne détecte pas les phénomènes nouveaux. Détail, images et piste d'un autre signal dans [Limites et échecs](failure_cases.md#phenomenes-jamais-vus-le-lot-inconnu).
 
+### Importance des bandes
+
+Le modèle reçoit 6 bandes. Lesquelles comptent ? Sans réentraîner (`scripts/band_importance.py`), on brouille une bande à la fois sur toutes les tuiles et on mesure ce que le modèle perd. Deux façons de brouiller : prendre la même bande d'une autre tuile tirée au hasard (permutation), ou la remplacer par sa valeur moyenne d'entraînement (l'information disparaît).
+
+<figure markdown="span">
+  ![Effet du brouillage de chaque bande sur les détections et les fausses alertes](assets/figures/importance_bandes.png)
+  <figcaption>Points perdus en détection, ou ajoutés en fausses alertes, quand on brouille une bande. Modèle de référence, test (546 tuiles hors ambiguës), seuil « inconnu » 0,67.</figcaption>
+</figure>
+
+| Bande brouillée | Test : inondations · incendies · fausses alertes (permutation / moyenne) | Validation : idem |
+|---|---|---|
+| Aucune (référence) | 72 · 95 · 1,4 % | 87 · 79 · 0,5 % |
+| B02 · bleu | 76 · 48 · 1,4 % / 52 · 85 · 4,2 % | 67 · 8 · 0,3 % / 73 · 47 · 3,5 % |
+| B03 · vert | 16 · 7 · 0,2 % / 40 · 0 · 0,9 % | 47 · 0 · 0,5 % / 60 · 0 · 0 % |
+| B04 · rouge | 32 · 57 · 3,5 % / 52 · 35 · 1,8 % | 40 · 18 · 2,2 % / 67 · 29 · 1,1 % |
+| B08 · proche infrarouge | 16 · 77 · 2,1 % / 16 · 41 · 0 % | 53 · 44 · 2,2 % / 53 · 26 · 0 % |
+| B11 · infrarouge court 1 | 24 · 86 · 3,9 % / 16 · 93 · 0,5 % | 47 · 55 · 6,3 % / 40 · 64 · 0,8 % |
+| B12 · infrarouge court 2 | 68 · 78 · 18,2 % / 8 · 17 · 0,2 % | 47 · 67 · 13,7 % / 67 · 18 · 1,1 % |
+
+Ce qui tient sur le test comme sur la validation, avec les deux méthodes :
+
+- **Aucune bande n'est inutile.** Brouiller n'importe laquelle fait perdre au moins une des deux détections, souvent beaucoup. Le réseau ne lit pas une bande isolée : il combine les six.
+- **Les inondations dépendent le plus du vert, du proche infrarouge et de l'infrarouge court 1** (B03, B08, B11), les bandes des indices d'eau NDWI et MNDWI : brouillée, chacune fait tomber le rappel inondation entre 16 et 60 %, dans tous les cas mesurés.
+- **L'infrarouge court 2 (B12) évite les fausses alertes.** Remplacé par celui d'une autre tuile, il fait passer les fausses alertes de 1,4 à 18 % sur le test (de 0,5 à 14 % en validation) : avec un B12 incohérent, des tuiles normales prennent la signature d'un sol brûlé. C'est la bande de l'indice de brûlure NBR.
+- **Surprise : sans le vert (B03), le modèle ne détecte presque plus aucun incendie** (0 à 7 %, sur les deux parties et avec les deux méthodes). La physique ne l'annonce pas, les indices de brûlure reposant sur le proche infrarouge et l'infrarouge court. Le réseau semble s'en servir comme référence de luminosité visible ; la mesure dit qu'il en dépend, pas pourquoi.
+
+**Limite de la méthode :** une bande brouillée donne une image que le modèle n'a jamais vue, aux relations entre bandes incohérentes. La mesure dit de quoi ce modèle-ci dépend, pas ce dont un modèle aurait besoin : les bandes sont corrélées, un réseau entraîné sans l'une d'elles pourrait s'en passer. Seul un réentraînement le dirait ; c'est l'objet de l'essai à 12 bandes.
+
 ### Courbes d'entraînement
 
 15 époques pour chaque réseau, environ 52 s chacune sur un T4, à 256 comme à 512 px (la lecture des tuiles domine). À 512 px, le F1 macro de validation atteint 0,94 (époque 14, retenue), contre 0,92 à 256 px (époque 13). En validation, le rappel des inondations atteint 87 % (13 sur 15) et celui des incendies 88 %, contre environ 70 % avec les étiquettes v2 : les normales recouvertes par un ancien feu brouillaient aussi la validation.
