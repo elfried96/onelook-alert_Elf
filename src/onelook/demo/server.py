@@ -45,6 +45,14 @@ def create_app(run: Path, data: Path, pack: Path, unknown: Path, passage: list[d
 
     app = FastAPI(title="One Look · Centre de veille")
 
+    @app.middleware("http")
+    async def revalidate(request, call_next):
+        # La page et ses scripts changent pendant la mise au point : le navigateur revalide à chaque chargement
+        response = await call_next(request)
+        if not request.url.path.startswith(("/api/", "/vendor/")):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
     @app.get("/api/meta")
     def meta() -> dict:
         return {"modele": engine.config["arch"].replace("_", " "), "taille_mo": round(engine.size_mb, 1),

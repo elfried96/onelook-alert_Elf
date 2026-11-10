@@ -2,6 +2,11 @@
 
 Une application locale qui montre le modèle au travail sur des images qu'il n'a jamais vues : une tuile Sentinel-2 en entrée, une passe, une décision, et ce qui l'explique. Elle tourne sur un ordinateur portable, sans GPU ni réseau.
 
+<figure markdown="span">
+  ![Le Centre de veille One Look sur une inondation en Bolivie](assets/figures/demo_centre_de_veille.jpg)
+  <figcaption>Une tuile du test en Bolivie : alerte inondation juste, décision robuste, description générée et tuiles d'entraînement les plus proches. Capture faite dans un navigateur sans carte graphique (globe dessiné par le processeur) : le temps affiché, 123 ms, est faussé par ce rendu ; la passe prend environ 15 ms sur la même machine au repos.</figcaption>
+</figure>
+
 ## Lancer
 
 ```bash
@@ -10,7 +15,7 @@ uv run --group demo python scripts/demo.py prepare
 uv run --group demo python scripts/demo.py
 ```
 
-La préparation, à faire une fois, copie en local les bibliothèques, la texture du globe, les polices et les contours des pays, puis construit le catalogue des tuiles et la banque de voisins (`data/demo/`). Elle demande le paquet de données (`data/pack/`), le lot « inconnu » (`data/unknown/`) et le run de référence (`runs/mobilenet_v3_small_512_v3/`, avec ses décisions sur le test et sur le lot « inconnu »). Le serveur ouvre ensuite le navigateur sur `http://127.0.0.1:8080`.
+La préparation, à faire une fois, copie en local les bibliothèques, la texture du globe, les polices et les contours des pays, puis construit le catalogue des tuiles et la banque de voisins (`data/demo/`). Elle demande le paquet de données (`data/pack/`), le lot « inconnu » (`data/unknown/`) et le run de référence (`runs/mobilenet_v3_small_512_v3/`, avec ses décisions sur le test et sur le lot « inconnu »). Le serveur ouvre ensuite le navigateur sur `http://127.0.0.1:8080`. Liens directs : `?tuile=<identifiant>` ouvre une tuile, `?passage` lance le passage satellite, `?regard` affiche la carte « où le modèle regarde ».
 
 ## Ce qu'on voit
 

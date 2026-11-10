@@ -36,8 +36,17 @@ Les satellites produisent plus d'images qu'on ne peut en envoyer au sol. Un mod�
 | Période | 16 octobre → 16 novembre 2026 |
 | Données | Images Sentinel-2, GeoTIFF 512 × 512 pixels |
 | Anomalies | Inondations et incendies |
-| Outils | Python, PyTorch, TorchGeo, ONNX Runtime |
+| Outils | Python, PyTorch, TorchGeo, ONNX Runtime ; démo : FastAPI, globe.gl, d3 |
 | Code | [elfried96/onelook-alert_Elf](https://github.com/elfried96/onelook-alert_Elf) |
+
+## Où en est le projet
+
+| | |
+|---|---|
+| Modèle de référence | MobileNetV3-Small, image entière à 512 px, 6 bandes Sentinel-2 · 6,1 Mo · environ 15 ms par image sur un cœur de processeur |
+| Sur le test (zones jamais vues) | 72 % des inondations et 95 % des incendies détectés, 1,4 % de fausses alertes, 2 pièges d'eau sur 48 en alerte (contre 42 pour des seuils classiques) |
+| Phénomènes jamais vus | Aucune fausse alerte, mais la décision « inconnu » fondée sur la confiance ne les reconnaît pas : voir [Limites et échecs](failure_cases.md#phenomenes-jamais-vus-le-lot-inconnu) |
+| Démo | Le [Centre de veille](demo.md), une application locale : globe 3D, analyse en direct, description générée sans modèle de langage |
 
 ## Parcourir la documentation
 
@@ -53,5 +62,6 @@ Les satellites produisent plus d'images qu'on ne peut en envoyer au sol. Un mod�
 | [Méthode](method.md) | Les approches testées, du seuil simple au petit VLM compressé |
 | [Résultats](results.md) | Le tableau comparatif |
 | [Limites et échecs](failure_cases.md) | L'analyse des erreurs |
+| [Démo](demo.md) | Le Centre de veille : lancer l'application et ce qu'elle montre |
 | [Reproduire](reproduce.md) | Installer, reconstruire les données, relancer les figures |
 

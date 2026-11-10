@@ -45,6 +45,11 @@ async function start() {
   refreshThreshold();
   tick();
   setInterval(tick, 1000);
+  // Liens directs : ?tuile=<id> ouvre une tuile, ?passage lance le passage satellite, ?regard affiche la carte
+  const params = new URLSearchParams(location.search);
+  if (params.has("regard")) toggle("regard", true);
+  if (params.has("passage")) play();
+  else if (params.get("tuile")) select(params.get("tuile"));
 }
 
 function layout() {
@@ -239,14 +244,19 @@ function setImages(id) {
 }
 
 function drawOcclusion(grid) {
+  // Cases dont le masquage fait baisser la confiance : remplissage et contour bleu clair, intensité selon la baisse
   const c = $("occ"), ctx = c.getContext("2d");
-  const n = grid.length, max = Math.max(3, ...grid.flat());
-  c.width = c.height = n;
-  grid.forEach((row, i) => row.forEach((v, j) => {
+  const n = grid.length, cell = 64, max = Math.max(3, ...grid.flat());
+  c.width = c.height = n * cell;
+  ctx.clearRect(0, 0, c.width, c.height);
+  if (Math.max(...grid.flat()) >= 3) grid.forEach((row, i) => row.forEach((v, j) => {
     const a = Math.max(0, v) / max;
-    ctx.fillStyle = `rgba(242,153,74,${0.85 * a})`;
-    ctx.clearRect(j, i, 1, 1);
-    ctx.fillRect(j, i, 1, 1);
+    if (a < 0.15) return;
+    ctx.fillStyle = `rgba(111,177,227,${0.55 * a})`;
+    ctx.fillRect(j * cell, i * cell, cell, cell);
+    ctx.strokeStyle = `rgba(232,238,241,${0.9 * a})`;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(j * cell + 1.5, i * cell + 1.5, cell - 3, cell - 3);
   }));
   c.classList.toggle("show", state.toggles.regard);
   state.robust = Math.max(...grid.flat()) < 3;
@@ -310,7 +320,7 @@ function log(a) {
 
 // ---------- Cube des 6 bandes ----------
 function buildCube() {
-  $("stack").innerHTML = BANDS.map((b, k) => `<div class="layer" style="--k:${k};transform:translateZ(${k * 22}px)"><img alt="${b}"><span class="lab">${b}</span></div>`).join("");
+  $("stack").innerHTML = BANDS.map((b, k) => `<div class="layer" style="--k:${k};transform:translateZ(${k * 14}px)"><img alt="${b}"><span class="lab">${b}</span></div>`).join("");
 }
 
 // ---------- Passage satellite ----------
