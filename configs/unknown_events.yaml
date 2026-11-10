@@ -1,0 +1,64 @@
+# Lot « inconnu » : phénomènes que le modèle n'a jamais vus, ni en entraînement, ni en validation.
+#
+# Réponse attendue : « inconnu ». Une alerte (inondation ou incendie) ou « normal » est une erreur,
+# à analyser : un modèle qui alerte sur une coulée de lave n'est pas absurde, il n'a pas le bon mot.
+#
+# Chaque événement donne une tuile de 512 × 512 pixels à 10 m (5,12 km de côté), centrée sur (lat, lon),
+# prise au passage le moins nuageux de la fenêtre (start, end), après l'événement.
+# Coordonnées approximatives du phénomène : chaque tuile est vérifiée à l'œil (planche de scripts/unknown_set.py sheet).
+# visible : le phénomène se voit-il sur la tuile ? Seules les tuiles « oui » comptent pour conclure.
+
+events:
+  # --- Éruptions volcaniques : coulées de lave récentes, dépôts pyroclastiques ---------------
+  - {name: la_palma_2021, lat: 28.615, lon: -17.900, category: eruption, start: 2022-01-01, end: 2022-03-31,
+     note: "Cumbre Vieja (Canaries), coulées de sept. à déc. 2021",
+     visible: "oui"}
+  - {name: fagradalsfjall_2021, lat: 63.885, lon: -22.270, category: eruption, start: 2021-07-01, end: 2021-09-30,
+     note: "Geldingadalir (Islande), coulée de mars à sept. 2021",
+     visible: "oui"}
+  - {name: nyiragongo_2021, lat: -1.580, lon: 29.230, category: eruption, start: 2021-06-01, end: 2021-08-31,
+     note: "Coulée de mai 2021 vers Goma (RD Congo)",
+     visible: "non (coulée non lisible : coordonnées à revoir)"}
+  - {name: mauna_loa_2022, lat: 19.610, lon: -155.470, category: eruption, start: 2022-12-15, end: 2023-02-28,
+     note: "Coulée de la zone de rift nord-est (Hawaï), nov.-déc. 2022",
+     visible: "oui"}
+  - {name: grindavik_2024, lat: 63.870, lon: -22.420, category: eruption, start: 2024-06-01, end: 2024-09-30,
+     note: "Sundhnúkur (Islande), coulées de 2024 près de Grindavík",
+     visible: "oui"}
+  - {name: semeru_2021, lat: -8.150, lon: 112.950, category: eruption, start: 2021-12-10, end: 2022-03-31,
+     note: "Semeru (Java), coulées pyroclastiques de déc. 2021",
+     visible: "non (nuages)"}
+
+  # --- Glissements de terrain : versants arrachés, coulées de débris ----------------------
+  - {name: hokkaido_2018, lat: 42.770, lon: 141.990, category: glissement, start: 2018-09-07, end: 2018-10-31,
+     note: "Séisme d'Iburi (Japon), des milliers de glissements à Atsuma",
+     visible: "oui"}
+  - {name: chamoli_2021, lat: 30.390, lon: 79.730, category: glissement, start: 2021-02-08, end: 2021-03-31,
+     note: "Avalanche de roche et de glace de Ronti, vallée de la Rishiganga (Inde)",
+     visible: "non (neige, dépôt non lisible)"}
+  - {name: bondo_2017, lat: 46.310, lon: 9.560, category: glissement, start: 2017-09-01, end: 2017-10-31,
+     note: "Écroulement du Piz Cengalo et laves torrentielles (Suisse)",
+     visible: "non (dépôt peu visible)"}
+  - {name: xinmo_2017, lat: 32.070, lon: 103.660, category: glissement, start: 2017-06-25, end: 2017-09-30,
+     note: "Glissement de Xinmo, Maoxian (Chine)",
+     visible: "oui"}
+  - {name: enga_2024, lat: -5.360, lon: 143.360, category: glissement, start: 2024-05-25, end: 2024-09-30,
+     note: "Glissement de Mulitaka (Papouasie-Nouvelle-Guinée)",
+     visible: "non (glissement trop petit ou hors tuile)"}
+  - {name: blatten_2025, lat: 46.410, lon: 7.830, category: glissement, start: 2025-06-01, end: 2025-09-30,
+     note: "Effondrement du glacier du Birch, Blatten (Suisse)",
+     visible: "oui"}
+
+  # --- Marées noires : nappes sur l'eau et côtes souillées --------------------------------
+  - {name: wakashio_2020, lat: -20.440, lon: 57.740, category: maree_noire, start: 2020-08-06, end: 2020-08-31,
+     note: "MV Wakashio, lagon de Mahébourg (Maurice)",
+     visible: "non (nappe invisible)"}
+  - {name: ventanilla_2022, lat: -11.760, lon: -77.170, category: maree_noire, start: 2022-01-16, end: 2022-02-15,
+     note: "Raffinerie La Pampilla, Ventanilla (Pérou)",
+     visible: "non (nappe invisible)"}
+  - {name: mindoro_2023, lat: 13.150, lon: 121.450, category: maree_noire, start: 2023-03-01, end: 2023-04-15,
+     note: "Princess Empress, Pola (Philippines)",
+     visible: "non (nappe invisible)"}
+  - {name: tobago_2024, lat: 11.160, lon: -60.780, category: maree_noire, start: 2024-02-08, end: 2024-03-15,
+     note: "Barge Gulfstream, côte sud de Tobago",
+     visible: "non (nappe invisible)"}

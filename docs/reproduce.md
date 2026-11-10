@@ -71,6 +71,7 @@ Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en 
 | Réévaluer un modèle exporté (mesures, taille, temps sur un cœur) | Local ou Colab | `uv run python scripts/evaluate.py runs/<nom> --split test` |
 | Recalibrer le seuil « inconnu » sans réentraîner (après `evaluate.py --split val`), puis réévaluer le test | Local | `uv run python scripts/calibrate.py runs/<nom> [--figure docs/assets/figures/seuil.png]` |
 | Quantifier un modèle exporté (`--mode int8`, `a16w8` ou `poids`), puis l'évaluer avec `--model model_<mode>.onnx` | Local | `uv run python scripts/quantize.py runs/<nom> --mode poids` |
+| Lot « inconnu » : télécharger les tuiles, puis évaluer un modèle et tracer les planches | Local | `uv run python scripts/unknown_set.py download`, puis `evaluate runs/<nom>` et `sheet runs/<nom>` |
 
 Les scripts appelés par les notebooks sont dans `scripts/` : `baselines.py`, `train.py` (`--smoke` pour un essai de deux pas sur 24 tuiles) et `evaluate.py` ; les planches d'erreurs de la page Limites et échecs viennent de `uv run python scripts/failure_figures.py runs/<nom>`. Les résultats (`runs/`) vont dans un dépôt privé Hugging Face, jamais dans Git.
 

@@ -98,6 +98,10 @@ Temps mesurés ensemble, en alternance, sur un cœur de l'i7-10850H : la machine
 - **Entraînement avec quantification simulée** (*quantization-aware training*, sur Colab) : le réseau apprend à tolérer les activations 8 bits. C'est la méthode usuelle pour MobileNetV3.
 - **Mesurer sur le matériel visé** : un processeur ARM avec instructions int8, ou un accélérateur, peut tirer de l'int8 un vrai gain de temps qu'un i7 de 2020 ne montre pas.
 
+### Phénomènes jamais vus
+
+Sur les 7 tuiles du lot « inconnu » où le phénomène se voit (4 éruptions, 3 glissements de terrain), le réseau de référence répond « normal » 7 fois, avec une confiance de 0,70 à 0,97 ; le réseau à 256 px répond « inconnu » 2 fois. Aucune fausse alerte, mais la décision « inconnu » fondée sur la confiance ne détecte pas les phénomènes nouveaux. Détail, images et piste d'un autre signal dans [Limites et échecs](failure_cases.md#phenomenes-jamais-vus-le-lot-inconnu).
+
 ### Courbes d'entraînement
 
 15 époques pour chaque réseau, environ 52 s chacune sur un T4, à 256 comme à 512 px (la lecture des tuiles domine). À 512 px, le F1 macro de validation atteint 0,94 (époque 14, retenue), contre 0,92 à 256 px (époque 13). En validation, le rappel des inondations atteint 87 % (13 sur 15) et celui des incendies 88 %, contre environ 70 % avec les étiquettes v2 : les normales recouvertes par un ancien feu brouillaient aussi la validation.

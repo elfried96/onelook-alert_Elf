@@ -119,8 +119,44 @@ Réseau de référence : réentraîné à pleine résolution sur les étiquettes
 
 ## Inconnus et tuiles ambiguës
 
-- **20 tuiles du test (2,7 %) passent en « inconnu »** avec le réseau v3 et le seuil 0,67 : 7 normales, 2 inondations et 11 tuiles ambiguës. Avec le seuil strict, c'était 55 tuiles (7 %). « Inconnu » attrape surtout des cas limites, ce qui est son rôle. Son efficacité sur de vrais phénomènes jamais vus (éruptions, glissements, marées noires) reste à mesurer avec le lot dédié, d'autant plus que le seuil a baissé.
+- **20 tuiles du test (2,7 %) passent en « inconnu »** avec le réseau v3 et le seuil 0,67 : 7 normales, 2 inondations et 11 tuiles ambiguës. Avec le seuil strict, c'était 55 tuiles (7 %). « Inconnu » attrape surtout des cas limites, ce qui est son rôle. Sur de vrais phénomènes jamais vus, en revanche, il ne marche pas ([plus bas](#phenomenes-jamais-vus-le-lot-inconnu)).
 - Sur les **201 tuiles ambiguës**, le réseau répond « normal » 136 fois, « inconnu » 11 fois et alerte 54 fois. 159 de ces tuiles sont des normales recouvertes par un feu récent : le réseau alerte incendie sur 50 d'entre elles, ce qui confirme que ces cicatrices se voient bien sur l'image.
+
+## Phénomènes jamais vus : le lot « inconnu »
+
+Le modèle doit répondre <span class="ol-badge ol-badge--unknown">Inconnu</span> devant un phénomène qu'il n'a jamais appris. Pour le vérifier, 16 tuiles d'événements réels (`configs/unknown_events.yaml`, `scripts/unknown_set.py`), lues comme toutes les autres en L2A sur Planetary Computer, au passage le plus dégagé après l'événement : 6 éruptions, 6 glissements de terrain, 4 marées noires. Elles ne servent ni à l'entraînement, ni au calibrage du seuil.
+
+**Chaque tuile est d'abord vérifiée à l'œil** : le phénomène doit se voir. Seules 7 tuiles passent ce filtre.
+
+- Éruptions : coulées de La Palma, du Mauna Loa et de Grindavík, lave encore chaude à Fagradalsfjall (rouge vif en infrarouge court). Le Semeru est sous les nuages ; la coulée du Nyiragongo n'apparaît pas sur la tuile (coordonnées à revoir).
+- Glissements : versants arrachés d'Hokkaido, cicatrice de Xinmo, dépôt de Blatten. Chamoli (neige), Bondo et Enga ne montrent pas de dépôt lisible à 10 m.
+- Marées noires : **aucune nappe visible** sur les 4 tuiles. Une nappe d'hydrocarbures est fine et change vite ; à 10 m et à la date du passage, l'image ressemble à une côte ordinaire. Ce phénomène est hors de portée de Sentinel-2 dans ce format (le radar Sentinel-1, exclu du projet, est l'outil habituel).
+
+| Tuiles où le phénomène se voit | Réseau 512 px v3 | Réseau 256 px v3 |
+|---|---|---|
+| 4 éruptions | 4 « normal » (confiance 0,70 à 0,94) | 3 « normal », 1 « inconnu » (Mauna Loa) |
+| 3 glissements | 3 « normal » (0,94 à 0,97) | 2 « normal », 1 « inconnu » (Xinmo) |
+
+<figure markdown="span">
+  ![Éruptions du lot inconnu et décisions du réseau à 512 px](assets/figures/inconnu_eruption.jpg)
+  <figcaption>Éruptions : couleurs naturelles en haut, infrarouge court en bas ; titre : date, décision et confiance du réseau à 512 px v3.</figcaption>
+</figure>
+
+<figure markdown="span">
+  ![Glissements de terrain du lot inconnu](assets/figures/inconnu_glissement.jpg)
+  <figcaption>Glissements de terrain. Hokkaido, Xinmo et Blatten montrent clairement les versants arrachés ou les dépôts ; le réseau y voit un paysage normal.</figcaption>
+</figure>
+
+<figure markdown="span">
+  ![Marées noires du lot inconnu](assets/figures/inconnu_maree_noire.jpg)
+  <figcaption>Marées noires : aucune nappe n'est visible. Ces tuiles ne permettent pas de juger le modèle.</figcaption>
+</figure>
+
+**Ce qu'on en tire : la confiance ne suffit pas à détecter l'inconnu.** Le réseau n'a appris que trois réponses ; devant une coulée de lave ou un versant arraché, il choisit la plus proche, « normal », souvent avec assurance. C'est une limite connue des réseaux de classification : une forte confiance veut dire « loin des autres classes apprises », pas « proche de ce que j'ai vu ». Le seuil abaissé à 0,67 n'est pas en cause : même avec l'ancien seuil (0,83), le réseau à 512 px n'aurait répondu « inconnu » que pour Grindavík.
+
+Rien d'alarmant pour la mission elle-même : aucune de ces tuiles ne déclenche de fausse alerte (une seule tuile non lisible, au Nyiragongo, déclenche une alerte inondation). Mais la promesse « inconnu » n'est pas tenue.
+
+**Essai rapide d'un autre signal**, sur les descripteurs internes du réseau (les 576 valeurs avant la décision) : la distance de Mahalanobis au plus proche nuage de tuiles d'entraînement (150 par classe). Réglée pour envoyer 5 % des tuiles du test en « inconnu », elle attrape 2 des 4 éruptions visibles (Fagradalsfjall, Mauna Loa) et aucun glissement. L'énergie des scores de sortie fait moins bien. Signal réel mais faible, mesuré sur 7 tuiles : c'est une piste, pas un résultat.
 
 ## Pistes d'amélioration, par ordre d'effet attendu
 
@@ -129,6 +165,7 @@ Réseau de référence : réentraîné à pleine résolution sur les étiquettes
 3. **Plus d'inondations, et plus variées** (WorldFloods, licence à vérifier) : 88 tuiles de 6 pays, c'est le point faible.
 4. ~~Régler le seuil « inconnu »~~ : fait, 98 % des bonnes réponses de validation gardées au lieu de 95 % ; à revoir avec le lot de phénomènes jamais vus.
 5. ~~Entraîner à 512 px~~ : fait, la pleine résolution aide les petites zones pour le double du temps.
+6. **Détecter l'inconnu autrement que par la confiance** : distance aux descripteurs d'entraînement (Mahalanobis), à mesurer sur un lot plus grand ; ou apprendre une classe « autre » à partir de paysages variés, au risque de ne couvrir que les phénomènes prévus.
 
 ## Limites connues
 

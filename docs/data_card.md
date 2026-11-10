@@ -59,7 +59,7 @@ Origine des tuiles :
 - 17 tuiles CaBuAr dont la lecture distante échoue à chaque essai ;
 - 5 tuiles CaBuAr dont la position n'a pas été retrouvée (corrélation trop faible).
 
-Les images <span class="ol-badge ol-badge--unknown">Inconnu</span> (éruptions, glissements, marées noires) formeront un lot à part, seulement en test, jamais en entraînement.
+Les images <span class="ol-badge ol-badge--unknown">Inconnu</span> forment un lot à part de 16 tuiles (6 éruptions, 6 glissements de terrain, 4 marées noires ; `configs/unknown_events.yaml`), seulement en test, jamais en entraînement ni en calibrage. Le phénomène n'est visible que sur 7 d'entre elles (voir [Limites et échecs](failure_cases.md#phenomenes-jamais-vus-le-lot-inconnu)).
 
 ## Sources et licences
 
@@ -72,7 +72,7 @@ Les images <span class="ol-badge ol-badge--unknown">Inconnu</span> (éruptions, 
 | NIFC InterAgency Fire Perimeter History (ArcGIS : `InterAgencyFirePerimeterHistory_All_Years_View` jusqu'en 2019, `InterAgencyFirePerimeterHistory_2020s_Read_Only` ensuite) | Périmètres des feux de Californie 2012-2022, dont ceux de CAL FIRE | – | Domaine public (données du gouvernement fédéral américain) — à confirmer | Anciens feux : normales californiennes passées en ambiguës (étiquettes seulement) |
 | Natural Earth | Contours des terres | – | Domaine public | Fond des cartes de cette documentation |
 | CloudSEN12 | Nuages et ombres | Sentinel-2 | À vérifier | Images normales difficiles (piste) |
-| Copernicus Browser / Copernicus EMS | Éruptions, glissements de terrain, marées noires… | Sentinel-2 | À vérifier | Test de l'inconnu |
+| Sentinel-2 L2A (Planetary Computer), lieux et dates tirés de comptes rendus publics des événements | 16 tuiles : éruptions, glissements de terrain, marées noires | Sentinel-2 | Données Copernicus : accès libre et gratuit | Test de l'inconnu |
 | xBD / xView2 | Dégâts aux bâtiments | Maxar, RGB ~0,5 m | – | **Écarté** : résolution et capteur incompatibles avec Sentinel-2 (voir [Cadrage](framing.md)) |
 
 ## Risques de fuite
