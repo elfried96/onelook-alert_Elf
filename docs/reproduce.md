@@ -59,6 +59,8 @@ Envoi (une fois, après `uv run hf auth login`) : `uv run python scripts/upload_
 
 Le paquet (`data/pack/`, environ 7,5 Go) contient une tuile par fichier : un GeoTIFF de 9 bandes (les 6 bandes retenues, la carte SCL, la vérité terrain unifiée et l'eau permanente), et son index. Il est envoyé une fois dans un dépôt de données **privé** sur Hugging Face, d'où Colab le télécharge en quelques minutes (`notebooks/02_colab_donnees.ipynb`).
 
+**Paquet à 12 bandes** (essai « 12 bandes ») : `uv run python scripts/pack_dataset.py --bandes 12` écrit `data/pack12/` (les 12 bandes L2A, puis les trois mêmes couches, environ 14 Go), à vérifier avec `scripts/check_pack.py --pack data/pack12` et à envoyer dans le même dépôt, sous `pack12/` : `uv run python scripts/upload_pack.py --pack data/pack12 --prefix pack12/`.
+
 ## Entraînement et évaluation
 
 Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en local. Les notebooks d'entraînement, dans `notebooks/`, clonent ce dépôt, installent l'environnement avec `uv sync` et récupèrent les données sur place.
@@ -67,6 +69,7 @@ Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en 
 |---|---|---|
 | Préparer la session, télécharger et vérifier les données | Colab | `notebooks/02_colab_donnees.ipynb` |
 | Baselines, entraînement, évaluation, rangement des résultats | Colab (GPU T4) | `notebooks/03_colab_entrainement.ipynb` |
+| Essai « 12 bandes » : 12 bandes brutes, puis mélange 1 × 1 avec pénalité L1 | Colab (GPU T4) | `notebooks/04_colab_12_bandes.ipynb` |
 | Récupérer les résultats | Local | `uv run hf download Elfried9684/onelook-alert-runs --include "runs/*" --local-dir .` |
 | Réévaluer un modèle exporté (mesures, taille, temps sur un cœur) | Local ou Colab | `uv run python scripts/evaluate.py runs/<nom> --split test` |
 | Recalibrer le seuil « inconnu » sans réentraîner (après `evaluate.py --split val`), puis réévaluer le test | Local | `uv run python scripts/calibrate.py runs/<nom> [--figure docs/assets/figures/seuil.png]` |

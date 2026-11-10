@@ -22,7 +22,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 from onelook.data.labels import CLASSES
-from onelook.data.pack import PACK_BANDS
+from onelook.data.pack import pack_band_names
 from onelook.evaluation.metrics import decision_metrics
 from onelook.models.cnn import ARCHS, OneLookNet
 from onelook.ood.confidence import calibrate_threshold, decisions, softmax
@@ -49,6 +49,9 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--name", help="Nom du dossier runs/<nom> (par défaut : architecture et taille)")
     parser.add_argument("--no-pretrained", action="store_true")
+    parser.add_argument("--melange", action="store_true",
+                        help="Mélange 1 × 1 appris des bandes d'entrée (essai 12 bandes, avec --pack data/pack12)")
+    parser.add_argument("--l1", type=float, default=0.0, help="Pénalité L1 sur le mélange : choisir peu de bandes")
     parser.add_argument("--smoke", action="store_true", help="Essai : 24 tuiles, 2 pas, CPU accepté")
     args = parser.parse_args()
 
@@ -67,8 +70,11 @@ def main() -> None:
         val_idx = val_idx.groupby("label").head(4).reset_index(drop=True)
         args.epochs, args.batch = 1, 4
     mean, std = band_stats(args.pack, train_idx, n=24 if args.smoke else 200)
+    bands = pack_band_names(args.pack / train_idx["path"].iat[0])
+    print(f"{len(bands)} bandes : {', '.join(bands)}" + (f" · mélange 1 × 1, L1 = {args.l1}" if args.melange else ""))
 
-    model = OneLookNet(args.arch, mean, std, size=args.size, pretrained=not args.no_pretrained).to(device)
+    model = OneLookNet(args.arch, mean, std, size=args.size, pretrained=not args.no_pretrained, bands=bands,
+                       mixer=args.melange).to(device)
     train_loader = DataLoader(PackDataset(args.pack, train_idx, train=True), batch_size=args.batch,
                               sampler=balanced_sampler(train_idx), num_workers=args.workers,
                               pin_memory=device == "cuda", drop_last=True, persistent_workers=args.workers > 0)
@@ -86,6 +92,8 @@ def main() -> None:
         for x, y in train_loader:
             with torch.autocast(device_type=device, enabled=device == "cuda"):
                 loss = loss_fn(model(x.to(device, non_blocking=True)), y.to(device))
+                if model.mixer is not None and args.l1 > 0:
+                    loss = loss + args.l1 * model.mixer.penalty()
             optimizer.zero_grad(set_to_none=True)
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -97,7 +105,8 @@ def main() -> None:
                 break
         probs = softmax(predict(model, val_loader, device))
         val = decision_metrics(val_idx, np.array(CLASSES, dtype=object)[probs.argmax(axis=1)])
-        history.append({"epoque": epoch, "perte": float(np.mean(losses)), "duree_s": round(time.time() - start, 1), **val})
+        history.append({"epoque": epoch, "perte": float(np.mean(losses)), "duree_s": round(time.time() - start, 1), **val,
+                        **({"melange": model.mixer.importance()} if model.mixer is not None else {})})
         print(f"Époque {epoch:2d} · perte {np.mean(losses):.3f} · val F1 macro {val['f1_macro']:.3f} · "
               f"rappel inond. {val['rappel_inondation']:.0%} · incendie {val['rappel_incendie']:.0%} · "
               f"fausses alertes {val['fausses_alertes']:.1%} · {time.time() - start:.0f} s", flush=True)
@@ -113,13 +122,16 @@ def main() -> None:
     threshold = calibrate_threshold(probs, np.array([CLASSES.index(c) for c in val_idx["label"]]))
     val_final = decision_metrics(val_idx, decisions(probs, threshold))
     model.eval().cpu()
-    torch.onnx.export(model, torch.zeros(1, 6, 512, 512), out / "model.onnx", input_names=["image"],
+    torch.onnx.export(model, torch.zeros(1, len(bands), 512, 512), out / "model.onnx", input_names=["image"],
                       output_names=["logits"], dynamic_axes={"image": {0: "batch"}, "logits": {0: "batch"}},
                       opset_version=17, dynamo=False)
-    config = {"arch": args.arch, "size": args.size, "bands": PACK_BANDS[:6], "classes": CLASSES,
+    config = {"arch": args.arch, "size": args.size, "bands": bands, "classes": CLASSES,
               "mean": mean, "std": std, "seuil_inconnu": threshold, "epochs": args.epochs, "lr": args.lr,
               "batch": args.batch, "pretrained": not args.no_pretrained, "val": val_final,
-              "parametres": sum(p.numel() for p in model.parameters())}
+              "parametres": sum(p.numel() for p in model.parameters()), "melange": args.melange, "l1": args.l1}
+    if model.mixer is not None:
+        config["importance_melange"] = model.mixer.importance()
+        config["poids_melange"] = model.mixer.weight().detach().cpu().numpy().round(4).tolist()
     (out / "config.json").write_text(json.dumps(config, indent=2, ensure_ascii=False))
     (out / "history.json").write_text(json.dumps(history, indent=2, ensure_ascii=False))
     size_mb = (out / "model.onnx").stat().st_size / 1e6

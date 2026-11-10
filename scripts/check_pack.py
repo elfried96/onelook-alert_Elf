@@ -1,4 +1,4 @@
-"""Vérifie le paquet d'entraînement (data/pack/) : fichiers présents, composition, lecture et débit.
+"""Vérifie le paquet d'entraînement (data/pack/ ou data/pack12/) : fichiers présents, composition, lecture et débit.
 
 Usage : uv run python scripts/check_pack.py [--pack data/pack] [--sample 64]
 Sert après le téléchargement sur Colab, avant tout entraînement.
@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from onelook.data.pack import TRUTH_BURNED, TRUTH_FLOOD, TRUTH_UNSEEN, read_packed
+from onelook.data.pack import TRUTH_BURNED, TRUTH_FLOOD, TRUTH_UNSEEN, pack_band_names, read_packed
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,10 +31,12 @@ def main() -> None:
 
     # Les parts de l'index doivent se retrouver dans la vérité terrain du paquet
     sample = index.sample(min(args.sample, len(index)), random_state=0)
+    bands = pack_band_names(args.pack / sample["path"].iat[0])
+    print(f"{len(bands)} bandes d'image : {', '.join(bands)}")
     start, errors = time.perf_counter(), []
     for row in sample.itertuples():
         tile = read_packed(args.pack / row.path)
-        assert tile["image"].shape == (6, 512, 512), row.id
+        assert tile["image"].shape == (len(bands), 512, 512), row.id
         seen = tile["truth"] != TRUTH_UNSEEN
         flood = (tile["truth"] == TRUTH_FLOOD).sum() / max(seen.sum(), 1)
         burned = (tile["truth"] == TRUTH_BURNED).mean()
