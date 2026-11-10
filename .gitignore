@@ -34,3 +34,6 @@ site/
 
 # Réglages locaux de Claude Code
 .claude/
+
+# Démo : bibliothèques copiées par scripts/demo.py prepare
+src/onelook/demo/static/vendor/

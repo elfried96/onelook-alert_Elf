@@ -1,0 +1,16 @@
+# Centre de veille One Look : le « passage satellite » de la présentation.
+#
+# Ordre de lecture et une phrase par tuile. Toutes viennent du test ou du lot « inconnu » :
+# le modèle ne les a jamais vues. Les échecs sont montrés exprès.
+
+run: runs/mobilenet_v3_small_512_v3
+
+passage:
+  - {id: Bolivia_129334, recit: "Inondation en Bolivie : grande plaine sous l'eau, alerte levée."}
+  - {id: 27181c20-089c-4c15-bdf7-55f48c58a6cf_2_q1, recit: "Zone brûlée en Californie : les deux tiers de la tuile, alerte levée."}
+  - {id: gange_varanasi_fleuve_2021, recit: "Le Gange à Varanasi : beaucoup d'eau, mais habituelle. Un simple seuil sur l'eau y verrait une inondation, pas le modèle."}
+  - {id: 497f80b4-878a-4f97-9522-5edcd5229dfb_1_q1, recit: "Cicatrice d'un feu récent, absente des étiquettes CaBuAr : le modèle la voit bien."}
+  - {id: Sri-Lanka_883641, recit: "Échec : petite inondation au Sri Lanka (5 % de la tuile), prise pour normale."}
+  - {id: 7eb77101-a414-4db0-bc77-80cc8a29d8d7_0_q2, recit: "Échec : désert du Mojave, sol sombre pris pour du brûlé."}
+  - {id: la_palma_2021, recit: "Jamais vu : coulées de lave de La Palma. Le modèle répond normal : il n'a pas de mot pour la lave."}
+  - {id: xinmo_2017, recit: "Jamais vu : glissement de Xinmo, en Chine. Pour le modèle, un versant nu comme un autre."}

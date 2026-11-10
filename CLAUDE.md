@@ -14,6 +14,8 @@ Format validé avec le mentor (21 oct) : images **Sentinel-2** (pas Sentinel-1),
 - Découpage par groupe : `configs/splits.yaml` (pays Sen1Floods11, zone spatiale CaBuAr à 10 km via `onelook.data.splits` — les plis CaBuAr fuyaient, région). Étiquettes : `configs/labels.yaml` + `onelook.data.labels` (parts sur la tuile entière, zone ambiguë écartée). Rapport et contrôle de fuite spatiale : `scripts/dataset_report.py`.
 - Filet de sécurité : si les incendies prennent du retard, le modèle inondation seul reste un projet complet.
 
+- Démo (10 nov) : « Centre de veille » local, `scripts/demo.py` (prepare, puis serve), moteur `onelook.demo` (passe ONNX, occlusion, voisins, Mahalanobis, description sans LLM) ; page dans `src/onelook/demo/static/` (vendor/ non versionné). Passage satellite : `configs/demo.yaml`. Voir docs/demo.md.
+
 ## Règles du projet
 
 - Langue : français pour la documentation, les commentaires et les messages de commit.
@@ -35,7 +37,7 @@ Format validé avec le mentor (21 oct) : images **Sentinel-2** (pas Sentinel-1),
   - Doc en local : `uv run mkdocs serve`
   - Tests : `uv run pytest`
   - Échantillon de données : `uv run python scripts/download_samples.py` (CaBuAr lu à distance via fsspec + h5py + hdf5plugin)
-- Groupes : `train` (torch, torchgeo, onnx) et `demo` (gradio) ne s'installent que sur demande (`uv sync --group train`), jamais en local pour entraîner.
+- Groupes : `train` (torch, torchgeo, onnx) et `demo` (fastapi, uvicorn) ne s'installent que sur demande (`uv sync --group train`), jamais en local pour entraîner.
 
 ## Design
 

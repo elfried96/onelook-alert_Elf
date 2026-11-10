@@ -57,6 +57,7 @@ nav:
   - Méthode: method.md
   - Résultats: results.md
   - Limites et échecs: failure_cases.md
+  - Démo: demo.md
   - Reproduire: reproduce.md
 
 markdown_extensions:

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One Look · Centre de veille</title>
+<link rel="stylesheet" href="vendor/fonts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="logo disp">One <span>Look</span></div>
+  <div class="disp sub">Centre de veille · Sentinel-2</div>
+  <div class="chip" id="chip-model">Modèle …</div>
+  <div class="chip" id="chip-time">Une passe … ms · 1 cœur de processeur</div>
+  <div class="chip" id="chip-seuil">Seuil « inconnu » …</div>
+  <label class="chip button" title="Analyser un GeoTIFF 512 × 512 (6, 12 ou 13 bandes)">Déposer un GeoTIFF<input type="file" id="file" accept=".tif,.tiff" hidden></label>
+  <div class="live mono"><span class="dot"></span>EN LIGNE · hors réseau · <span id="clock"></span></div>
+</header>
+
+<main>
+  <section class="panel globe-panel">
+    <div class="ttl"><span id="globe-title">Tuiles jamais vues</span><span class="mono" id="globe-count"></span></div>
+    <div id="globe"></div>
+    <div class="globe-tools">
+      <button id="play" class="primary">▶ Passage satellite</button>
+      <select id="goto" aria-label="Aller à une tuile"><option value="">Aller à…</option></select>
+    </div>
+    <div class="legend"><span><i class="n"></i>Normal</span><span><i class="a"></i>Alerte</span><span><i class="u"></i>Inconnu</span><span class="hint">glisser · zoomer · cliquer un point</span></div>
+  </section>
+
+  <section class="panel tile-panel">
+    <div class="ttl"><span id="tile-title">Choisir une tuile sur le globe</span><span class="mono" id="tile-coords"></span></div>
+    <div class="tile" id="tile">
+      <img id="img-base" alt="Tuile Sentinel-2">
+      <img id="img-truth" alt="" class="overlay">
+      <canvas id="occ" width="8" height="8" class="overlay"></canvas>
+      <div class="scan"></div>
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <div class="robust mono" id="robust">Aucune zone décisive : décision robuste</div>
+      <div class="hud mono" id="hud">512 × 512 px · 10 m · 5,12 km · 6 bandes</div>
+      <div class="empty" id="empty">Cliquez un point du globe<br>ou lancez le passage satellite</div>
+    </div>
+    <div class="layers">
+      <button data-view="naturel" class="on">Couleurs naturelles</button>
+      <button data-view="swir">Infrarouge court</button>
+      <button data-view="pir">Proche infrarouge</button>
+      <button data-toggle="verite">Vérité terrain</button>
+      <button data-toggle="regard">Où le modèle regarde</button>
+    </div>
+    <div class="recit" id="recit"></div>
+  </section>
+
+  <section class="panel decision-panel">
+    <div class="ttl"><span>Décision</span><span class="mono" id="pass"></span></div>
+    <div class="badge disp idle" id="badge">En attente</div>
+    <div class="truth" id="truth"></div>
+    <div class="bars" id="bars"></div>
+    <div class="slider">
+      <div class="ttl"><span>Seuil « inconnu » : déplacer pour voir tout le globe changer</span><span class="mono" id="seuil-val"></span></div>
+      <input type="range" id="seuil" min="0.34" max="0.99" step="0.01">
+    </div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+</main>
+
+<footer>
+  <section class="panel desc-panel">
+    <div class="ttl"><span>Description générée · sans modèle de langage, à partir de mesures</span><span class="mono" id="desc-time"></span></div>
+    <div id="desc" class="desc"><p class="muted">La description apparaît après l'analyse.</p></div>
+  </section>
+  <section class="panel cube-panel">
+    <div class="ttl"><span>Ce que reçoit le modèle</span><span class="mono">6 × 512 × 512</span></div>
+    <div class="cube"><div class="stack" id="stack"></div></div>
+    <div class="cube-hint">survoler pour écarter les 6 bandes</div>
+  </section>
+  <section class="panel feed-panel">
+    <div class="ttl"><span>Journal des décisions</span><span class="mono" id="feed-count"></span></div>
+    <ol id="feed"></ol>
+  </section>
+</footer>
+
+<div class="drop" id="drop"><div>Déposer le GeoTIFF pour l'analyser</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/topojson-client.min.js"></script>
+<script src="vendor/globe.gl.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -36,7 +36,7 @@ docs/           site de documentation (MkDocs)
 notebooks/      explorations
 src/onelook/    code principal : données, modèles, entraînement, évaluation, inconnu, export
 scripts/        commandes : téléchargement, entraînement, évaluation, export
-demo/           interface de démonstration
+src/onelook/demo/  Centre de veille, la démo locale (voir docs/demo.md)
 checkpoints/    modèles entraînés (non versionnés)
 tests/          tests automatiques
 ```
