@@ -75,6 +75,13 @@ Les images <span class="ol-badge ol-badge--unknown">Inconnu</span> forment un lo
 | Sentinel-2 L2A (Planetary Computer), lieux et dates tirés de comptes rendus publics des événements | 16 tuiles : éruptions, glissements de terrain, marées noires | Sentinel-2 | Données Copernicus : accès libre et gratuit | Test de l'inconnu |
 | xBD / xView2 | Dégâts aux bâtiments | Maxar, RGB ~0,5 m | – | **Écarté** : résolution et capteur incompatibles avec Sentinel-2 (voir [Cadrage](framing.md)) |
 
+### Modèles pré-entraînés
+
+| Modèle | Source | Licence | Utilisé pour |
+|---|---|---|---|
+| MobileNetV3-Small, ResNet18 (ImageNet) | torchvision | Code BSD-3-Clause ; poids ImageNet à vérifier | Réseau léger (point de départ de l'entraînement) |
+| SmolVLM-256M-Instruct, SmolVLM-500M-Instruct | Hugging Face (`HuggingFaceTB`) | Apache 2.0 | Piste VLM (tel quel, puis affiné par LoRA) |
+
 ## Risques de fuite
 
 | Risque | Parade |

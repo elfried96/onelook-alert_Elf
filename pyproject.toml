@@ -44,6 +44,14 @@ demo = [
     "python-multipart>=0.0.9",
     "uvicorn>=0.30",
 ]
+vlm = [
+    "accelerate>=1.0",
+    "bitsandbytes>=0.45 ; sys_platform == 'linux'",
+    "num2words>=0.5",
+    "peft>=0.13",
+    "torch>=2.3",
+    "transformers>=4.50",
+]
 
 [tool.uv]
 default-groups = ["dev", "docs"]

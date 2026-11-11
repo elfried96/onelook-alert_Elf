@@ -15,6 +15,7 @@ Format validé avec le mentor (21 oct) : images **Sentinel-2** (pas Sentinel-1),
 - Filet de sécurité : si les incendies prennent du retard, le modèle inondation seul reste un projet complet.
 
 - Essai 12 bandes (11 nov, fait) : paquet `data/pack12/` (`pack_dataset.py --bandes 12`, dépôt HF sous `pack12/`), `OneLookNet(bands=…, mixer=True)` = mélange 1 × 1 normalisé (`BandMixer`) + `--l1` ; notebook `notebooks/04_colab_12_bandes.ipynb`. Résultat : le mélange garde exactement les 6 bandes de référence, les 12 bandes brutes ne gagnent pas nettement (test un peu mieux, validation moins bien) pour un temps presque doublé → on garde 6 bandes (`scripts/band_mixer.py`, docs/results.md).
+- Piste VLM (11 nov, préparée) : SmolVLM 256M/500M (`onelook.models.vlm`, `scripts/vlm.py`), deux vues (naturel, infrarouge court), scores des lettres A/B/C après « Answer: » → probabilités, même seuil « inconnu » ; LoRA et 4 bits sur Colab (`notebooks/05_colab_vlm.ipynb`, groupe `vlm`). Essai local zéro-shot du 256M : répond presque toujours « incendie », 7,4 s par tuile sur un cœur, 1 Go en float32.
 - Démo (10 nov) : « Centre de veille » local, `scripts/demo.py` (prepare, puis serve), moteur `onelook.demo` (passe ONNX, occlusion, voisins, Mahalanobis, description sans LLM) ; page dans `src/onelook/demo/static/` (vendor/ non versionné). Passage satellite : `configs/demo.yaml`. Voir docs/demo.md.
 
 ## Règles du projet
@@ -38,7 +39,7 @@ Format validé avec le mentor (21 oct) : images **Sentinel-2** (pas Sentinel-1),
   - Doc en local : `uv run mkdocs serve`
   - Tests : `uv run pytest`
   - Échantillon de données : `uv run python scripts/download_samples.py` (CaBuAr lu à distance via fsspec + h5py + hdf5plugin)
-- Groupes : `train` (torch, torchgeo, onnx) et `demo` (fastapi, uvicorn) ne s'installent que sur demande (`uv sync --group train`), jamais en local pour entraîner.
+- Groupes : `train` (torch, torchgeo, onnx), `vlm` (torch, transformers, peft, bitsandbytes) et `demo` (fastapi, uvicorn) ne s'installent que sur demande (`uv sync --group train`), jamais en local pour entraîner.
 
 ## Design
 

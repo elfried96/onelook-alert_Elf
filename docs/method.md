@@ -26,7 +26,7 @@ flowchart LR
     Le modèle exporté contient sa normalisation et son redimensionnement : il prend une tuile brute 512 × 512 en réflectance.
 4. **Détection de l'inconnu** (`onelook.ood.confidence`) : le modèle répond seulement si sa confiance (probabilité maximale) dépasse un seuil, calibré pour garder 95 % des bonnes réponses de validation. En dessous, la décision est <span class="ol-badge ol-badge--unknown">Inconnu</span>.
 5. **Allègement** : export ONNX (inclus), puis quantification 8 bits.
-6. **Petit VLM compressé** (piste ouverte par le mentor) : un modèle vision-langage de quelques centaines de millions de paramètres, testé d'abord tel quel, puis affiné (LoRA) sur l'entraînement, puis compressé (8 puis 4 bits). On lui fait choisir directement l'une des décisions, ce qui garde une seule passe, avec une courte justification en cas d'alerte. Il est comparé au réseau léger sur le point le plus difficile : distinguer l'eau habituelle de l'inondation.
+6. **Petit VLM compressé** (piste ouverte par le mentor, `onelook.models.vlm`, `scripts/vlm.py`) : SmolVLM (256 ou 500 millions de paramètres) voit la tuile deux fois, en couleurs naturelles et en infrarouge court (384 × 384 px chacune), avec une question à trois réponses (A normal, B inondation, C incendie). On ne le laisse pas écrire : on lit en une seule passe ses scores pour les trois lettres, juste après « Answer: », et ils deviennent des probabilités traitées comme celles du réseau (même seuil « inconnu », mêmes mesures). Testé tel quel, puis affiné par LoRA sur l'entraînement (entropie croisée sur les trois scores, mêmes tirages équilibrés que le réseau), puis chargé en 4 bits. Il est comparé au réseau léger sur le point le plus difficile : distinguer l'eau habituelle de l'inondation.
 
 Tous les entraînements tournent sur GPU distant (Google Colab), jamais en local.
 
@@ -41,3 +41,4 @@ Tous les entraînements tournent sur GPU distant (Google Colab), jamais en local
 | Modèle | Source | Licence |
 |---|---|---|
 | MobileNetV3-Small, ResNet18 (ImageNet) | torchvision | Code BSD-3-Clause ; licence des poids ImageNet à vérifier dans la documentation torchvision |
+| SmolVLM-256M-Instruct, SmolVLM-500M-Instruct | Hugging Face (`HuggingFaceTB`) | Apache 2.0 |
