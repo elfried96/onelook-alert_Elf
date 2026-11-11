@@ -77,6 +77,7 @@ Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en 
 | Lot « inconnu » : télécharger les tuiles, puis évaluer un modèle et tracer les planches | Local | `uv run python scripts/unknown_set.py download`, puis `evaluate runs/<nom>` et `sheet runs/<nom>` |
 | Démo « Centre de veille » : préparer une fois, puis lancer | Local | `uv run --group demo python scripts/demo.py prepare`, puis `uv run --group demo python scripts/demo.py` |
 | Importance des bandes (brouillage d'une bande, sans réentraîner) | Local | `uv run python scripts/band_importance.py runs/<nom> --split test --figure docs/assets/figures/importance_bandes.png` |
+| Essai « 12 bandes » : évaluation et poids du mélange | Local | `uv run python scripts/evaluate.py runs/<nom> --pack data/pack12 --split val` (puis `--split test`), `uv run python scripts/band_mixer.py runs/<nom> --figure docs/assets/figures/melange_bandes.png` |
 
 Les scripts appelés par les notebooks sont dans `scripts/` : `baselines.py`, `train.py` (`--smoke` pour un essai de deux pas sur 24 tuiles) et `evaluate.py` ; les planches d'erreurs de la page Limites et échecs viennent de `uv run python scripts/failure_figures.py runs/<nom>`. Les résultats (`runs/`) vont dans un dépôt privé Hugging Face, jamais dans Git.
 

@@ -46,6 +46,7 @@ Les satellites produisent plus d'images qu'on ne peut en envoyer au sol. Un mod�
 | Modèle de référence | MobileNetV3-Small, image entière à 512 px, 6 bandes Sentinel-2 · 6,1 Mo · environ 15 ms par image sur un cœur de processeur |
 | Sur le test (zones jamais vues) | 72 % des inondations et 95 % des incendies détectés, 1,4 % de fausses alertes, 2 pièges d'eau sur 48 en alerte (contre 42 pour des seuils classiques) |
 | Phénomènes jamais vus | Aucune fausse alerte, mais la décision « inconnu » fondée sur la confiance ne les reconnaît pas : voir [Limites et échecs](failure_cases.md#phenomenes-jamais-vus-le-lot-inconnu) |
+| Choix des bandes | Les 6 bandes retenues sont toutes utiles ; donner les 12 bandes au réseau n'apporte pas de gain net et double presque le temps : voir l'[essai à 12 bandes](results.md#essai-a-12-bandes) |
 | Démo | Le [Centre de veille](demo.md), une application locale : globe 3D, analyse en direct, description générée sans modèle de langage |
 
 ## Parcourir la documentation

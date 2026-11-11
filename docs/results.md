@@ -17,9 +17,11 @@ Tableau comparatif des approches testées, demandé par le sujet. Toutes les mes
 | Même réseau, seuil « inconnu » strict (0,83) ³ | 94 % · 99 % | 60 % · 94 % | 0,5 % | 0 % | 6,10 | 14,7 ² |
 | Même réseau, poids int8 seuls ⁵ | 85 % · 98 % | 68 % · 94 % | 1,2 % | 4,2 % | 1,64 | × 2,3 ⁵ |
 | Même réseau, int8 complet ⁵ | – · – | 0 % · 0 % | 0 % | 0 % | 1,88 | × 1,4 ⁵ |
+| 12 bandes L2A dans la première convolution ⁶ | 91 % · 97 % | 80 % · 97 % | 1,2 % | 2,1 % | 6,10 | 28,6 ⁶ |
+| 12 bandes, mélange 1 × 1 appris + L1 ⁶ | 88 % · 97 % | 60 % · 94 % | 1,2 % | 2,1 % | 6,10 | 32,4 ⁶ |
 | Petit VLM compressé | – | – | – | – | – | – |
 
-Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation, voir [plus bas](#le-seuil-inconnu)). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H ; les cinq derniers réseaux ont été chronométrés ensemble, en alternance, pour être comparables. ³ Seuil calibré en gardant 95 % des bonnes réponses de validation ; les autres réseaux gardent 98 %. ⁵ Quantification après entraînement, voir [plus bas](#quantification) ; temps donné par rapport au flottant mesuré dans la même séance.
+Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation, voir [plus bas](#le-seuil-inconnu)). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H ; les cinq derniers réseaux ont été chronométrés ensemble, en alternance, pour être comparables. ³ Seuil calibré en gardant 95 % des bonnes réponses de validation ; les autres réseaux gardent 98 %. ⁵ Quantification après entraînement, voir [plus bas](#quantification) ; temps donné par rapport au flottant mesuré dans la même séance. ⁶ Essai à 12 bandes, voir [plus bas](#essai-a-12-bandes) ; chronométré en alternance avec le réseau de référence, qui prenait 15,3 ms dans la même séance.
 
 **Lecture rapide :**
 
@@ -128,7 +130,32 @@ Ce qui tient sur le test comme sur la validation, avec les deux méthodes :
 - **L'infrarouge court 2 (B12) évite les fausses alertes.** Remplacé par celui d'une autre tuile, il fait passer les fausses alertes de 1,4 à 18 % sur le test (de 0,5 à 14 % en validation) : avec un B12 incohérent, des tuiles normales prennent la signature d'un sol brûlé. C'est la bande de l'indice de brûlure NBR.
 - **Surprise : sans le vert (B03), le modèle ne détecte presque plus aucun incendie** (0 à 7 %, sur les deux parties et avec les deux méthodes). La physique ne l'annonce pas, les indices de brûlure reposant sur le proche infrarouge et l'infrarouge court. Le réseau semble s'en servir comme référence de luminosité visible ; la mesure dit qu'il en dépend, pas pourquoi.
 
-**Limite de la méthode :** une bande brouillée donne une image que le modèle n'a jamais vue, aux relations entre bandes incohérentes. La mesure dit de quoi ce modèle-ci dépend, pas ce dont un modèle aurait besoin : les bandes sont corrélées, un réseau entraîné sans l'une d'elles pourrait s'en passer. Seul un réentraînement le dirait ; c'est l'objet de l'essai à 12 bandes.
+**Limite de la méthode :** une bande brouillée donne une image que le modèle n'a jamais vue, aux relations entre bandes incohérentes. La mesure dit de quoi ce modèle-ci dépend, pas ce dont un modèle aurait besoin : les bandes sont corrélées, un réseau entraîné sans l'une d'elles pourrait s'en passer. Seul un réentraînement le dirait ; c'est l'objet de l'[essai à 12 bandes](#essai-a-12-bandes).
+
+### Essai à 12 bandes
+
+Hypothèse : donner au réseau les 12 bandes L2A (B10 n'existe pas en L2A) et le laisser choisir celles qui l'aident, au lieu des 6 bandes retenues à la main. Deux réseaux, entraînés comme le réseau de référence (512 px, étiquettes v3, 15 époques, même découpage, seuil « inconnu » qui garde 98 % des bonnes réponses de validation), sur le paquet `data/pack12/` :
+
+- **12 bandes brutes** : la première convolution reçoit les 12 bandes (poids RVB pré-entraînés sur B04, B03, B02, leur moyenne pour les autres) ;
+- **mélange appris** : une convolution 1 × 1 (`BandMixer`) combine les 12 bandes en 6 canaux avant le réseau, avec une pénalité L1 (0,01) qui pousse chaque canal à n'utiliser que peu de bandes. Ses poids sont normalisés ligne par ligne : sinon la BatchNorm qui suit compense et la L1 rétrécit tout sans rien choisir. Au départ, chaque canal recopie une des 6 bandes de référence.
+
+| Réseau | Test : rappel (inond. · incendie) · fausses alertes · eau | Validation : idem | F1 val. (époque 15) | Temps (ms) |
+|---|---|---|---|---|
+| 6 bandes (référence) | 72 % · 95 % · 1,4 % · 2 sur 48 | 87 % · 79 % · 0,5 % · 0 | 0,94 | 15,3 |
+| 12 bandes brutes | 80 % · 97 % · 1,2 % · 1 sur 48 | 80 % · 62 % · 0,8 % · 0 | 0,90 | 28,6 |
+| 12 bandes, mélange + L1 | 60 % · 94 % · 1,2 % · 1 sur 48 | 93 % · 70 % · 0,8 % · 0 | 0,92 | 32,4 |
+
+<figure markdown="span">
+  ![Poids du mélange appris : chaque canal garde sa bande de départ](assets/figures/melange_bandes.png)
+  <figcaption>Poids du mélange après 15 époques. Les 6 canaux gardent leur bande de départ (poids 0,99 à 1,00) ; les 6 bandes ajoutées (B01, B05, B06, B07, B8A, B09) pèsent au plus 0,06 dans un canal.</figcaption>
+</figure>
+
+Ce qu'on en retient :
+
+- **Le mélange n'a pris aucune bande nouvelle.** Les trois canaux infrarouges (B08, B11, B12) sont restés exactement sur leur bande ; seuls les canaux visibles empruntent un peu ailleurs (au plus 0,09, B08 retiré du bleu, B12 ajouté au vert). Les bandes « red edge » (B05, B06, B07, B8A), l'aérosol (B01) et la vapeur d'eau (B09) n'apportent rien que le réseau sache utiliser. **Limite** : le mélange partait des 6 bandes de référence et la L1 pénalise tout écart ; le résultat dit qu'aucune bande ajoutée ne valait sa pénalité, pas qu'un départ neutre aurait trouvé la même chose.
+- **Les 12 bandes brutes ne gagnent pas nettement.** Sur le test, 2 inondations et 1 incendie de plus sont détectés et une fausse alerte de moins ; sur la validation, c'est l'inverse, avec 11 incendies de moins (62 % au lieu de 79 %) et un F1 de 0,90 au lieu de 0,94. Un seul entraînement par ligne : ces écarts de quelques tuiles, de sens contraire d'une partie à l'autre, ne sont pas significatifs.
+- **Le coût est net** : le temps par tuile double presque (28,6 ms au lieu de 15,3), et une tuile à 12 bandes pèse deux fois plus à lire et à transmettre. Le mélange coûte un peu plus (32,4 ms), car l'export garde la convolution 1 × 1 à part ; fondu dans la première convolution (deux opérations linéaires), il reviendrait au coût du réseau à 12 bandes brutes, pas à celui du réseau à 6 bandes.
+- **Conclusion : on garde les 6 bandes.** C'est cohérent avec la [mesure par brouillage](#importance-des-bandes) : chacune des 6 bandes compte, et les bandes ajoutées n'apportent pas d'information que le réseau exploite. Figure : `scripts/band_mixer.py`.
 
 ### Courbes d'entraînement
 

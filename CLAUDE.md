@@ -14,7 +14,7 @@ Format validé avec le mentor (21 oct) : images **Sentinel-2** (pas Sentinel-1),
 - Découpage par groupe : `configs/splits.yaml` (pays Sen1Floods11, zone spatiale CaBuAr à 10 km via `onelook.data.splits` — les plis CaBuAr fuyaient, région). Étiquettes : `configs/labels.yaml` + `onelook.data.labels` (parts sur la tuile entière, zone ambiguë écartée). Rapport et contrôle de fuite spatiale : `scripts/dataset_report.py`.
 - Filet de sécurité : si les incendies prennent du retard, le modèle inondation seul reste un projet complet.
 
-- Essai 12 bandes (10 nov, préparé) : paquet `data/pack12/` (`pack_dataset.py --bandes 12`, dépôt HF sous `pack12/`), `OneLookNet(bands=…, mixer=True)` = mélange 1 × 1 normalisé (`BandMixer`) + `--l1` ; notebook `notebooks/04_colab_12_bandes.ipynb`.
+- Essai 12 bandes (11 nov, fait) : paquet `data/pack12/` (`pack_dataset.py --bandes 12`, dépôt HF sous `pack12/`), `OneLookNet(bands=…, mixer=True)` = mélange 1 × 1 normalisé (`BandMixer`) + `--l1` ; notebook `notebooks/04_colab_12_bandes.ipynb`. Résultat : le mélange garde exactement les 6 bandes de référence, les 12 bandes brutes ne gagnent pas nettement (test un peu mieux, validation moins bien) pour un temps presque doublé → on garde 6 bandes (`scripts/band_mixer.py`, docs/results.md).
 - Démo (10 nov) : « Centre de veille » local, `scripts/demo.py` (prepare, puis serve), moteur `onelook.demo` (passe ONNX, occlusion, voisins, Mahalanobis, description sans LLM) ; page dans `src/onelook/demo/static/` (vendor/ non versionné). Passage satellite : `configs/demo.yaml`. Voir docs/demo.md.
 
 ## Règles du projet
