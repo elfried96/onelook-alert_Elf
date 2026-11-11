@@ -1,8 +1,9 @@
 """Piste du mentor : un petit VLM (SmolVLM) à la place du réseau, mesuré comme les autres approches.
 
 Deux étapes :
-    evaluate  décisions sur une partie (val, puis test) ; le seuil « inconnu » est calibré sur la validation
-    train     affinage LoRA sur l'entraînement (GPU, Colab uniquement), meilleure époque sur la validation
+    evaluate  décisions et réponses rédigées sur une partie (val, puis test) ; seuil « inconnu » calibré sur la validation
+    train     affinage LoRA sur l'entraînement (GPU, Colab uniquement) : le modèle apprend à rédiger la réponse modèle
+              de chaque tuile (onelook.models.vlm.answer) ; meilleure époque sur la validation
 
     uv run --group vlm python scripts/vlm.py evaluate --name smolvlm256_zero --split val
     uv run --group vlm python scripts/vlm.py evaluate --name smolvlm256_zero --split test
@@ -27,7 +28,7 @@ from tqdm import tqdm
 from onelook.data.labels import CLASSES
 from onelook.data.pack import read_packed
 from onelook.evaluation.metrics import confusion, decision_metrics, format_row
-from onelook.models.vlm import DEFAULT_MODEL, PROMPT, VLMClassifier, gpu_dtype, tile_images
+from onelook.models.vlm import DEFAULT_MODEL, PROMPT, VLMClassifier, answer, gpu_dtype, tile_images
 from onelook.ood.confidence import KEEP, calibrate_threshold, decisions
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,10 +62,15 @@ def evaluate(args: argparse.Namespace) -> None:
         index = index.groupby("label", group_keys=False).head(args.limit).reset_index(drop=True)
     clf = load_classifier(args.model, args.adapter, args.bits)
 
-    probs = []
+    probs, texts = [], []
     for start in tqdm(range(0, len(index), args.batch), desc=f"VLM ({args.split})"):
-        paths = index["path"].iloc[start:start + args.batch]
-        probs.append(clf.predict([read_packed(args.pack / p)["image"] for p in paths]))
+        tiles = [read_packed(args.pack / p)["image"] for p in index["path"].iloc[start:start + args.batch]]
+        if args.max_new_tokens:
+            p, t = clf.describe(tiles, args.max_new_tokens)
+            texts += t
+        else:
+            p = clf.predict(tiles)
+        probs.append(p)
     probs = np.concatenate(probs)
 
     if args.split == "val":
@@ -76,17 +82,23 @@ def evaluate(args: argparse.Namespace) -> None:
     preds = decisions(probs, config["seuil_inconnu"])
     metrics = decision_metrics(index, preds)
 
-    time_ms = None
+    time_ms = time_text_ms = None
     if args.timing:  # temps d'une tuile sur un seul cœur (CPU), comme pour le réseau ; seulement en local
         torch.set_num_threads(1)
         tiles = [read_packed(args.pack / p)["image"] for p in index["path"].head(args.timing + 1)]
         clf.predict(tiles[:1])
-        times = []
-        for tile in tiles[1:]:
-            start = time.perf_counter()
-            clf.predict([tile])
-            times.append((time.perf_counter() - start) * 1000)
-        time_ms = float(np.median(times))
+
+        def median_ms(step) -> float:
+            times = []
+            for tile in tiles[1:]:
+                start = time.perf_counter()
+                step([tile])
+                times.append((time.perf_counter() - start) * 1000)
+            return float(np.median(times))
+
+        time_ms = median_ms(clf.predict)  # la décision seule
+        if args.max_new_tokens:
+            time_text_ms = median_ms(lambda t: clf.describe(t, args.max_new_tokens))  # décision et phrase
     size_mb = model_size_mb(clf)
 
     print(confusion(index, preds), "\n")
@@ -94,19 +106,38 @@ def evaluate(args: argparse.Namespace) -> None:
     print("\n" + format_row(f"{args.name} ({args.split})", metrics, size_mb, time_ms))
     config_path.write_text(json.dumps(config, indent=2, ensure_ascii=False))
     result = {"split": args.split, "modele": args.model, "taille_mo": size_mb, "temps_ms_1_coeur": time_ms,
-              "limite": args.limit, **metrics}
+              "temps_redaction_ms_1_coeur": time_text_ms, "limite": args.limit, **metrics}
     (run / f"eval_{args.split}_model.json").write_text(json.dumps(result, indent=2, ensure_ascii=False))
     pd.DataFrame({"id": index["id"], "label": index["label"], "decision": preds,
-                  **{f"p_{c}": probs[:, i] for i, c in enumerate(CLASSES)}}).to_csv(
+                  **{f"p_{c}": probs[:, i] for i, c in enumerate(CLASSES)},
+                  **({"reponse": texts} if texts else {})}).to_csv(
         run / f"decisions_{args.split}_model.csv", index=False)
 
 
+class AnswerDataset:
+    """Tuiles d'entraînement (rotations et miroirs) avec leur réponse modèle, pour l'affinage."""
+
+    def __init__(self, pack: Path, index: pd.DataFrame, seed: int = 0):
+        from onelook.training.data import augment
+
+        self.pack, self.index, self.augment = pack, index, augment
+        self.rng = np.random.default_rng(seed)
+
+    def __len__(self) -> int:
+        return len(self.index)
+
+    def __getitem__(self, i: int) -> tuple[np.ndarray, str]:
+        row = self.index.iloc[i]
+        image = np.ascontiguousarray(self.augment(read_packed(self.pack / row["path"])["image"], self.rng))
+        return image, answer(row)
+
+
 def train(args: argparse.Namespace) -> None:
-    """Affinage LoRA : entropie croisée sur les scores des trois lettres. GPU requis (Colab)."""
+    """Affinage LoRA : le modèle apprend à rédiger la réponse modèle de chaque tuile (lettre, puis phrase). GPU requis."""
     from peft import LoraConfig, get_peft_model
     from torch.utils.data import DataLoader
 
-    from onelook.training.data import PackDataset, balanced_sampler, trainable
+    from onelook.training.data import balanced_sampler, trainable
 
     if not torch.cuda.is_available():
         raise SystemExit("Pas de GPU : l'affinage tourne sur Colab, jamais en local")
@@ -124,7 +155,7 @@ def train(args: argparse.Namespace) -> None:
     train_idx, val_idx = trainable(index, "train"), trainable(index, "val")
     if args.smoke:  # essai éclair : deux pas, 16 tuiles de validation
         val_idx = val_idx.groupby("label", group_keys=False).head(6).reset_index(drop=True)
-    loader = DataLoader(PackDataset(args.pack, train_idx, train=True, seed=args.seed), batch_size=args.batch,
+    loader = DataLoader(AnswerDataset(args.pack, train_idx, seed=args.seed), batch_size=args.batch,
                         sampler=balanced_sampler(train_idx), num_workers=2, collate_fn=lambda b: b)
     optimizer = torch.optim.AdamW([p for p in clf.model.parameters() if p.requires_grad], lr=args.lr)
     steps = 2 if args.smoke else args.epochs * len(loader)
@@ -139,11 +170,9 @@ def train(args: argparse.Namespace) -> None:
         for step, batch in enumerate(tqdm(loader, desc=f"Époque {epoch}")):
             if args.smoke and step == steps:
                 break
-            images = [tile_images(image.numpy()) for image, _ in batch]
-            labels = torch.tensor([label for _, label in batch], device=clf.device)
+            images = [tile_images(image) for image, _ in batch]
             with torch.autocast("cuda", dtype=amp):
-                logits = clf.letter_logits(clf.inputs(images))
-            loss = torch.nn.functional.cross_entropy(logits, labels)
+                loss = clf.answer_loss(images, [text for _, text in batch])
             optimizer.zero_grad()
             scaler.scale(loss).backward()
             scaler.step(optimizer)
@@ -184,6 +213,7 @@ def main() -> None:
     ev.add_argument("--bits", type=int, choices=[4, 8], help="Quantification à la volée (GPU)")
     ev.add_argument("--limit", type=int, help="Essai : N tuiles par décision attendue")
     ev.add_argument("--timing", type=int, default=0, help="Tuiles chronométrées sur un cœur (local)")
+    ev.add_argument("--max-new-tokens", type=int, default=40, help="Longueur de la phrase rédigée ; 0 : décision seule")
     tr = sub.choices["train"]
     tr.add_argument("--epochs", type=int, default=2)
     tr.add_argument("--lr", type=float, default=2e-4)
