@@ -46,6 +46,7 @@ extra_css:
 
 nav:
   - Accueil: index.md
+  - Rapport final: rapport.md
   - Cadrage: framing.md
   - Données:
       - Carnet de données: data_card.md

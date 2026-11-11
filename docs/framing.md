@@ -99,9 +99,9 @@ Le mentor laisse la liberté d'explorer pour réussir le projet, et propose une 
 |---|---|---|
 | 16 → 22 oct | Mise en place, cadrage, exploration des données | Fait |
 | 23 → 2 nov | Harmonisation, jeu complet (3 312 tuiles), découpage sans fuite, eau permanente | Fait |
-| 3 → 7 nov | Documentation illustrée, données sur Colab, approches simples (NDWI, NBR), réseau léger, détection de l'inconnu | En cours |
-| 7 → 11 nov | Piste VLM compressé, allègement (ONNX, quantification), tableau comparatif | À venir |
-| 11 → 14 nov | Cas d'échec, démo, rapport final | À venir |
+| 3 → 7 nov | Documentation illustrée, données sur Colab, approches simples (NDWI, NBR), réseau léger, détection de l'inconnu | Fait |
+| 7 → 11 nov | Allègement (ONNX, quantification), tableau comparatif, cas d'échec, démo, essai à 12 bandes | Fait ; piste VLM non faite |
+| 11 → 14 nov | Rapport final, support de présentation | En cours |
 | 14 → 16 nov | Marge, relecture, répétition de la démo | À venir |
 
 **Filet de sécurité :** si la partie incendies prend du retard, le modèle inondation seul reste un projet complet, validé par le mentor.

@@ -53,6 +53,7 @@ Les satellites produisent plus d'images qu'on ne peut en envoyer au sol. Un mod�
 
 | Page | Contenu |
 |---|---|
+| [Rapport final](rapport.md) | La synthèse du projet : problème, données, résultats, échecs, leçons |
 | [Cadrage](framing.md) | Le périmètre, les décisions, les pièges, le planning |
 | [Carnet de données](data_card.md) | Vue d'ensemble : chiffres, carte, composition, sources, biais |
 | → [Lire une image Sentinel-2](data/sentinel2.md) | Bandes, couleurs, indices NDWI et NBR, signatures spectrales |
