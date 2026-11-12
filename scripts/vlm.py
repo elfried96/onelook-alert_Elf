@@ -146,6 +146,8 @@ def train(args: argparse.Namespace) -> None:
     torch.manual_seed(args.seed)
 
     clf = VLMClassifier(args.model, dtype=torch.float32)  # poids en float32, calcul en précision mixte
+    # Recalcul des activations au lieu de les garder : sans lui, 8 tuiles (16 images) dépassent les 15 Go du T4.
+    clf.model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     lora = LoraConfig(r=args.rank, lora_alpha=2 * args.rank, lora_dropout=0.05,
                       target_modules=["q_proj", "k_proj", "v_proj", "o_proj"])
     clf.model = get_peft_model(clf.model, lora)
@@ -158,7 +160,7 @@ def train(args: argparse.Namespace) -> None:
     loader = DataLoader(AnswerDataset(args.pack, train_idx, seed=args.seed), batch_size=args.batch,
                         sampler=balanced_sampler(train_idx), num_workers=2, collate_fn=lambda b: b)
     optimizer = torch.optim.AdamW([p for p in clf.model.parameters() if p.requires_grad], lr=args.lr)
-    steps = 2 if args.smoke else args.epochs * len(loader)
+    steps = 2 if args.smoke else args.epochs * len(loader) // args.accum  # pas d'optimisation
     amp = gpu_dtype()
     scaler = torch.amp.GradScaler(enabled=amp == torch.float16)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=args.lr, total_steps=steps, pct_start=0.1)
@@ -167,18 +169,20 @@ def train(args: argparse.Namespace) -> None:
     for epoch in range(1, args.epochs + 1):
         clf.model.train()
         losses, start = [], time.time()
+        optimizer.zero_grad()
         for step, batch in enumerate(tqdm(loader, desc=f"Époque {epoch}")):
-            if args.smoke and step == steps:
+            if args.smoke and step == steps * args.accum:
                 break
             images = [tile_images(image) for image, _ in batch]
             with torch.autocast("cuda", dtype=amp):
                 loss = clf.answer_loss(images, [text for _, text in batch])
-            optimizer.zero_grad()
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-            scheduler.step()
+            scaler.scale(loss / args.accum).backward()  # gradients cumulés sur args.accum lots
             losses.append(loss.item())
+            if (step + 1) % args.accum == 0 and scheduler.last_epoch < steps:
+                scaler.step(optimizer)
+                scaler.update()
+                scheduler.step()
+                optimizer.zero_grad()
         clf.model.eval()
         with torch.autocast("cuda", dtype=amp):
             probs = np.concatenate([clf.predict([read_packed(args.pack / p)["image"] for p in val_idx["path"].iloc[i:i + 16]])
@@ -195,6 +199,7 @@ def train(args: argparse.Namespace) -> None:
     (run / "history.json").write_text(json.dumps(history, indent=2, ensure_ascii=False))
     (run / "config.json").write_text(json.dumps({"arch": "vlm", "model": args.model, "lora_rang": args.rank,
                                                  "epochs": args.epochs, "lr": args.lr, "batch": args.batch,
+                                                 "accum": args.accum,
                                                  "classes": CLASSES, "prompt": PROMPT}, indent=2, ensure_ascii=False))
 
 
@@ -216,6 +221,7 @@ def main() -> None:
     ev.add_argument("--max-new-tokens", type=int, default=40, help="Longueur de la phrase rédigée ; 0 : décision seule")
     tr = sub.choices["train"]
     tr.add_argument("--epochs", type=int, default=2)
+    tr.add_argument("--accum", type=int, default=4, help="Lots cumulés par pas (lot effectif : batch × accum)")
     tr.add_argument("--lr", type=float, default=2e-4)
     tr.add_argument("--rank", type=int, default=16)
     tr.add_argument("--seed", type=int, default=0)
