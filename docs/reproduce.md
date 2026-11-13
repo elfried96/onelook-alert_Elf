@@ -71,6 +71,7 @@ Les entraînements tournent sur un GPU distant (Google Colab ou Kaggle), pas en 
 | Baselines, entraînement, évaluation, rangement des résultats | Colab (GPU T4) | `notebooks/03_colab_entrainement.ipynb` |
 | Essai « 12 bandes » : 12 bandes brutes, puis mélange 1 × 1 avec pénalité L1 | Colab (GPU T4) | `notebooks/04_colab_12_bandes.ipynb` |
 | Piste VLM : SmolVLM tel quel, affiné par LoRA, puis en 4 bits | Colab (GPU T4) | `notebooks/05_colab_vlm.ipynb` (groupe `vlm`) |
+| Piste VLM : affinage LoRA et 4 bits seuls (quota Colab épuisé) | Kaggle (GPU T4 x2, Internet, secret `HF_TOKEN`) | `notebooks/06_kaggle_vlm.ipynb` |
 | Récupérer les résultats | Local | `uv run hf download Elfried9684/onelook-alert-runs --include "runs/*" --local-dir .` |
 | Réévaluer un modèle exporté (mesures, taille, temps sur un cœur) | Local ou Colab | `uv run python scripts/evaluate.py runs/<nom> --split test` |
 | Recalibrer le seuil « inconnu » sans réentraîner (après `evaluate.py --split val`), puis réévaluer le test | Local | `uv run python scripts/calibrate.py runs/<nom> [--figure docs/assets/figures/seuil.png]` |

@@ -3,7 +3,7 @@
 Tableau comparatif des approches testées, demandé par le sujet. Toutes les mesures sont faites sur le même **jeu de test** : 747 tuiles de zones jamais vues à l'entraînement, dont 546 hors tuiles ambiguës (433 normales, 25 inondations, 88 incendies). Les définitions sont dans `onelook.evaluation.metrics`.
 
 !!! note "Étiquettes v3 (9 novembre)"
-    Toutes les lignes sont mesurées avec les étiquettes v3 : les normales californiennes recouvertes par un feu de l'année de l'image ou de l'année précédente sont écartées (voir [anciens feux](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)). Les lignes « entraîné en v1 / v2 » sont d'anciens réseaux, entraînés sur des étiquettes moins propres et gardés pour comparaison. Entraînements sur Colab (`notebooks/03_colab_entrainement.ipynb`), temps mesurés en local. Piste VLM en cours (`notebooks/05_colab_vlm.ipynb`).
+    Toutes les lignes sont mesurées avec les étiquettes v3 : les normales californiennes recouvertes par un feu de l'année de l'image ou de l'année précédente sont écartées (voir [anciens feux](data/labels_splits.md#anciens-feux-des-normales-qui-nen-sont-pas)). Les lignes « entraîné en v1 / v2 » sont d'anciens réseaux, entraînés sur des étiquettes moins propres et gardés pour comparaison. Entraînements sur Colab (`notebooks/03_colab_entrainement.ipynb`), temps mesurés en local. Piste VLM : zéro-shot fait, affinage en cours (`notebooks/06_kaggle_vlm.ipynb`).
 
 | Approche | Précision (inond. · incendie) | Rappel (inond. · incendie) | Fausses alertes | Fausses alertes sur l'eau | Taille (Mo) | Temps (ms) |
 |---|---|---|---|---|---|---|
@@ -19,9 +19,10 @@ Tableau comparatif des approches testées, demandé par le sujet. Toutes les mes
 | Même réseau, int8 complet ⁵ | – · – | 0 % · 0 % | 0 % | 0 % | 1,88 | × 1,4 ⁵ |
 | 12 bandes L2A dans la première convolution ⁶ | 91 % · 97 % | 80 % · 97 % | 1,2 % | 2,1 % | 6,10 | 28,6 ⁶ |
 | 12 bandes, mélange 1 × 1 appris + L1 ⁶ | 88 % · 97 % | 60 % · 94 % | 1,2 % | 2,1 % | 6,10 | 32,4 ⁶ |
-| Petit VLM compressé | – | – | – | – | – | – |
+| Petit VLM SmolVLM-256M, sans affinage ⁷ | – · 17 % | 0 % · 98 % | 92 % | 85 % | 513 | 7 400 ⁷ |
+| Petit VLM SmolVLM-500M, sans affinage ⁷ | – · 16 % | 0 % · 100 % | 99 % | 100 % | 1 015 | – |
 
-Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation, voir [plus bas](#le-seuil-inconnu)). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H ; les cinq derniers réseaux ont été chronométrés ensemble, en alternance, pour être comparables. ³ Seuil calibré en gardant 95 % des bonnes réponses de validation ; les autres réseaux gardent 98 %. ⁵ Quantification après entraînement, voir [plus bas](#quantification) ; temps donné par rapport au flottant mesuré dans la même séance. ⁶ Essai à 12 bandes, voir [plus bas](#essai-a-12-bandes) ; chronométré en alternance avec le réseau de référence, qui prenait 15,3 ms dans la même séance.
+Réseaux avec la décision « inconnu » (seuil de confiance calibré sur la validation, voir [plus bas](#le-seuil-inconnu)). ¹ Calcul des indices et statistiques en Python (NumPy), sur Colab. ² ONNX Runtime, un cœur d'un Intel Core i7-10850H ; les cinq derniers réseaux ont été chronométrés ensemble, en alternance, pour être comparables. ³ Seuil calibré en gardant 95 % des bonnes réponses de validation ; les autres réseaux gardent 98 %. ⁵ Quantification après entraînement, voir [plus bas](#quantification) ; temps donné par rapport au flottant mesuré dans la même séance. ⁶ Essai à 12 bandes, voir [plus bas](#essai-a-12-bandes) ; chronométré en alternance avec le réseau de référence, qui prenait 15,3 ms dans la même séance. ⁷ VLM tel quel (zéro-shot), voir [plus bas](#piste-vlm) ; taille des poids en mémoire sur GPU (16 bits) ; temps de la seule décision en PyTorch float32, un cœur, mesuré sur 1 tuile en local.
 
 **Lecture rapide :**
 
@@ -156,6 +157,23 @@ Ce qu'on en retient :
 - **Les 12 bandes brutes ne gagnent pas nettement.** Sur le test, 2 inondations et 1 incendie de plus sont détectés et une fausse alerte de moins ; sur la validation, c'est l'inverse, avec 11 incendies de moins (62 % au lieu de 79 %) et un F1 de 0,90 au lieu de 0,94. Un seul entraînement par ligne : ces écarts de quelques tuiles, de sens contraire d'une partie à l'autre, ne sont pas significatifs.
 - **Le coût est net** : le temps par tuile double presque (28,6 ms au lieu de 15,3), et une tuile à 12 bandes pèse deux fois plus à lire et à transmettre. Le mélange coûte un peu plus (32,4 ms), car l'export garde la convolution 1 × 1 à part ; fondu dans la première convolution (deux opérations linéaires), il reviendrait au coût du réseau à 12 bandes brutes, pas à celui du réseau à 6 bandes.
 - **Conclusion : on garde les 6 bandes.** C'est cohérent avec la [mesure par brouillage](#importance-des-bandes) : chacune des 6 bandes compte, et les bandes ajoutées n'apportent pas d'information que le réseau exploite. Figure : `scripts/band_mixer.py`.
+
+### Piste VLM
+
+Hypothèse du mentor (29 octobre) : un petit modèle vision-langage, qui « connaît » le monde, distinguerait mieux l'eau habituelle (mer, fleuves, rizières) d'une inondation. SmolVLM (256M et 500M, Apache 2.0) voit la tuile deux fois (couleurs naturelles, infrarouge court), choisit une lettre (A normal, B inondation, C incendie) puis rédige une phrase. Les scores des trois lettres deviennent des probabilités, traitées comme celles du réseau : même seuil « inconnu », mêmes mesures (`onelook.models.vlm`, `scripts/vlm.py`).
+
+**Sans affinage (zéro-shot, Colab, 12 novembre), le VLM répond « incendie » à presque tout.**
+
+| Modèle | Test : rappel (inond. · incendie) · fausses alertes · eau | Validation : idem |
+|---|---|---|
+| SmolVLM-256M | 0 % · 98 % · 92 % · 85 % | 0 % · 97 % · 92 % · 79 % |
+| SmolVLM-500M | 0 % · 100 % · 99 % · 100 % | 0 % · 97 % · 98 % · 100 % |
+
+- Aucune inondation n'est reconnue, et 397 normales sur 433 deviennent des « incendies » (256M). Le rappel incendie de 98 % n'est donc pas une détection : la lettre C sort quelle que soit l'image.
+- Le plus gros modèle fait pire (99 % de fausses alertes) : la taille n'apporte rien tant que le modèle ne sait pas lire une image Sentinel-2. Ses connaissances viennent de photos ordinaires, pas de vues satellite en fausses couleurs.
+- Le coût est sans commune mesure : 513 Mo et 7,4 s par tuile sur un cœur (256M, float32), contre 6,1 Mo et 15 ms pour le réseau de référence, soit environ 500 fois plus lent.
+
+**Affinage LoRA** (le modèle apprend la lettre et une phrase modèle tirée des mesures de chaque tuile) : un premier passage sur Colab a dépassé la mémoire du T4, puis Colab gratuit a coupé l'accès au GPU. Il est relancé sur Kaggle (`notebooks/06_kaggle_vlm.ipynb`) ; ses résultats viendront ici.
 
 ### Courbes d'entraînement
 
